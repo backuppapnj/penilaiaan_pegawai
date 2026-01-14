@@ -1,0 +1,128 @@
+import InputError from '@/components/input-error';
+import TextLink from '@/components/text-link';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
+import AuthLayout from '@/layouts/auth-layout';
+import { store } from '@/routes/login';
+import { email } from '@/routes/password';
+import { Form, Head } from '@inertiajs/react';
+
+interface LoginProps {
+    status?: string;
+    canResetPassword: boolean;
+}
+
+export default function Login({ status, canResetPassword }: LoginProps) {
+    return (
+        <AuthLayout
+            title="Login Sistem Penilaian Pegawai"
+            description="Masuk dengan NIP dan password Anda"
+        >
+            <Head title="Login" />
+
+            <div className="mb-6 text-center">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    PA Penajam
+                </h1>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    Sistem Penilaian Pegawai Terbaik
+                </p>
+            </div>
+
+            <Form
+                {...store.form()}
+                resetOnSuccess={['password']}
+                className="flex flex-col gap-6"
+            >
+                {({ processing, errors }) => (
+                    <>
+                        <div className="grid gap-6">
+                            <div className="grid gap-2">
+                                <Label htmlFor="nip">
+                                    NIP (Nomor Induk Pegawai)
+                                </Label>
+                                <Input
+                                    id="nip"
+                                    type="text"
+                                    name="nip"
+                                    required
+                                    autoFocus
+                                    tabIndex={1}
+                                    autoComplete="username"
+                                    placeholder="Masukkan NIP"
+                                />
+                                <InputError message={errors.nip} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <div className="flex items-center">
+                                    <Label htmlFor="password">Password</Label>
+                                    {canResetPassword && (
+                                        <TextLink
+                                            href={email()}
+                                            className="ml-auto text-sm"
+                                            tabIndex={5}
+                                        >
+                                            Lupa password?
+                                        </TextLink>
+                                    )}
+                                </div>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    required
+                                    tabIndex={2}
+                                    autoComplete="current-password"
+                                    placeholder="Masukkan password"
+                                />
+                                <InputError message={errors.password} />
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                                <Checkbox
+                                    id="remember"
+                                    name="remember"
+                                    tabIndex={3}
+                                />
+                                <Label
+                                    htmlFor="remember"
+                                    className="cursor-pointer"
+                                >
+                                    Ingat saya
+                                </Label>
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="mt-4 w-full"
+                                tabIndex={4}
+                                disabled={processing}
+                            >
+                                {processing && <Spinner className="mr-2" />}
+                                Masuk
+                            </Button>
+                        </div>
+                    </>
+                )}
+            </Form>
+
+            {status && (
+                <div className="mb-4 text-center text-sm font-medium text-green-600">
+                    {status}
+                </div>
+            )}
+
+            <div className="mt-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+                <p className="text-center text-sm text-blue-800 dark:text-blue-300">
+                    <strong>Informasi:</strong> Gunakan NIP sebagai username dan
+                    password default adalah NIP Anda. Ganti password setelah
+                    login pertama.
+                </p>
+            </div>
+        </AuthLayout>
+    );
+}

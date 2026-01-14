@@ -1,0 +1,10 @@
+{
+  "track_id": "vote-system-penajam_20250113",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-01-13T00:00:00Z",
+  "updated_at": "2025-01-13T00:00:00Z",
+  "description": "Sistem Penilaian Pegawai Terbaik Pengadilan Agama Penajam dengan 3 kategori penilaian",
+  "priority": "high",
+  "deadline": "2025-01-14"
+}
