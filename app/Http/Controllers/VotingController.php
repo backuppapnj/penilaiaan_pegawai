@@ -32,14 +32,15 @@ class VotingController extends Controller
 
         $categories = Category::with('criteria')->orderBy('urutan')->get();
 
-        $voterId = auth()->user()?->employee?->id;
+        $userId = auth()->id();
+        $employeeId = auth()->user()?->employee?->id;
 
         $votedEmployees = Vote::where('period_id', $activePeriod->id)
-            ->where('voter_id', $voterId)
+            ->where('voter_id', $userId)
             ->pluck('employee_id');
 
         $employees = Employee::with('category')
-            ->where('id', '!=', $voterId)
+            ->where('id', '!=', $employeeId)
             ->whereNotNull('category_id')
             ->whereNotIn('id', $votedEmployees)
             ->whereNotIn('jabatan', [
@@ -52,7 +53,7 @@ class VotingController extends Controller
             ->get();
 
         $eligibleEmployeeCounts = Employee::select('category_id', DB::raw('count(*) as total'))
-            ->where('id', '!=', $voterId)
+            ->where('id', '!=', $employeeId)
             ->whereNotNull('category_id')
             ->whereNotIn('jabatan', [
                 'Ketua Pengadilan Tingkat Pertama Klas II',
@@ -79,16 +80,17 @@ class VotingController extends Controller
 
         $criteria = $category->criteria()->orderBy('urutan')->get();
 
-        $voterId = auth()->user()?->employee?->id;
+        $userId = auth()->id();
+        $employeeId = auth()->user()?->employee?->id;
 
         $votedEmployeeIds = Vote::where('period_id', $period->id)
-            ->where('voter_id', $voterId)
+            ->where('voter_id', $userId)
             ->where('category_id', $category->id)
             ->pluck('employee_id');
 
         $employees = Employee::with('category')
             ->where('category_id', $category->id)
-            ->where('id', '!=', $voterId)
+            ->where('id', '!=', $employeeId)
             ->whereNotIn('id', $votedEmployeeIds)
             ->whereNotIn('jabatan', [
                 'Ketua Pengadilan Tingkat Pertama Klas II',
@@ -117,7 +119,7 @@ class VotingController extends Controller
             return back()->with('error', 'Periode tidak sedang dibuka untuk voting');
         }
 
-        $voterId = auth()->user()?->employee?->id;
+        $voterId = auth()->id();
 
         DB::transaction(function () use ($validated, $voterId) {
             $scores = $validated['scores'];
@@ -147,7 +149,7 @@ class VotingController extends Controller
 
     public function history(): Response
     {
-        $voterId = auth()->user()?->employee?->id;
+        $voterId = auth()->id();
 
         $votes = Vote::with(['period', 'employee', 'category', 'voteDetails.criterion'])
             ->where('voter_id', $voterId)
