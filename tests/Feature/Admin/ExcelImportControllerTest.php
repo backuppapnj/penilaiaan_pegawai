@@ -19,7 +19,9 @@ it('can display sikep import index page', function () {
     $employee = Employee::factory()->create();
     DisciplineScore::factory()->create([
         'employee_id' => $employee->id,
-        'period_id' => Period::first()->id
+        'period_id' => null,
+        'month' => 1,
+        'year' => 2025
     ]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.sikep.index'));
@@ -27,19 +29,22 @@ it('can display sikep import index page', function () {
     $response->assertStatus(200)
         ->assertInertia(fn ($page) => $page
             ->component('Admin/SikepImport/Index')
-            ->has('periods')
+            ->has('months')
+            ->has('years')
             ->has('recentImports')
         );
 });
 
 it('can get discipline scores for a period', function () {
-    $period = Period::factory()->create();
     DisciplineScore::factory()->count(5)->create([
-        'period_id' => $period->id,
+        'period_id' => null,
+        'month' => 1,
+        'year' => 2025
     ]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.sikep.scores', [
-        'period_id' => $period->id
+        'month' => 1,
+        'year' => 2025
     ]));
 
     $response->assertStatus(200)
@@ -66,7 +71,6 @@ it('can delete a discipline score', function () {
 
 it('can store uploaded excel file and process it', function () {
     Storage::fake('local');
-    $period = Period::factory()->create();
     $file = UploadedFile::fake()->create('sikep.xlsx', 100);
 
     mock(SikepImportService::class)
@@ -79,7 +83,8 @@ it('can store uploaded excel file and process it', function () {
         ]);
 
     $response = $this->actingAs($this->admin)->post(route('admin.sikep.store'), [
-        'period_id' => $period->id,
+        'month' => 1,
+        'year' => 2025,
         'excel_file' => $file
     ]);
 
@@ -91,7 +96,6 @@ it('can store uploaded excel file and process it', function () {
 
 it('handles import service exceptions', function () {
     Storage::fake('local');
-    $period = Period::factory()->create();
     $file = UploadedFile::fake()->create('sikep.xlsx', 100);
 
     mock(SikepImportService::class)
@@ -100,7 +104,8 @@ it('handles import service exceptions', function () {
         ->andThrow(new \Exception('Service Error'));
 
     $response = $this->actingAs($this->admin)->post(route('admin.sikep.store'), [
-        'period_id' => $period->id,
+        'month' => 1,
+        'year' => 2025,
         'excel_file' => $file
     ]);
 

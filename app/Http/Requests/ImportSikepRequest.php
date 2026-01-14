@@ -23,7 +23,8 @@ class ImportSikepRequest extends FormRequest
     {
         return [
             'excel_file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'], // Max 10MB
-            'period_id' => ['required', 'integer', 'exists:periods,id'],
+            'month' => ['required', 'integer', 'between:1,12'],
+            'year' => ['required', 'integer', 'min:2020', 'max:'.(date('Y') + 1)],
         ];
     }
 
@@ -38,8 +39,11 @@ class ImportSikepRequest extends FormRequest
             'excel_file.required' => 'File Excel harus diunggah',
             'excel_file.mimes' => 'File harus berformat Excel (.xlsx atau .xls)',
             'excel_file.max' => 'Ukuran file maksimal 10MB',
-            'period_id.required' => 'Periode harus dipilih',
-            'period_id.exists' => 'Periode tidak valid',
+            'month.required' => 'Bulan harus dipilih',
+            'month.between' => 'Bulan tidak valid',
+            'year.required' => 'Tahun harus dipilih',
+            'year.min' => 'Tahun tidak valid',
+            'year.max' => 'Tahun tidak valid',
         ];
     }
 }

@@ -14,10 +14,15 @@ import { dashboard } from '@/routes';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
+    Award,
     BookOpen,
     ClipboardCheck,
+    FileSpreadsheet,
     Folder,
+    History,
     LayoutGrid,
+    Settings2,
+    UserCog,
     Users,
 } from 'lucide-react';
 import AppLogo from './app-logo';
@@ -35,9 +40,24 @@ export function AppSidebar() {
             },
         ];
 
+        // Menu untuk Peserta
+        if (
+            userRole === 'Peserta' ||
+            userRole === 'Penilai' ||
+            userRole === 'Admin' ||
+            userRole === 'SuperAdmin'
+        ) {
+            items.push({
+                title: 'Sertifikat Saya',
+                href: '/peserta/sertifikat',
+                icon: Award,
+            });
+        }
+
+        // Menu untuk Penilai
         if (
             userRole === 'Penilai' ||
-            userRole === 'Peserta' ||
+            userRole === 'Peserta' || // Peserta biasanya juga bisa menilai teman sejawat
             userRole === 'Admin' ||
             userRole === 'SuperAdmin'
         ) {
@@ -46,13 +66,38 @@ export function AppSidebar() {
                 href: '/penilai/voting',
                 icon: ClipboardCheck,
             });
+
+            items.push({
+                title: 'Riwayat Voting',
+                href: '/penilai/voting/history',
+                icon: History,
+            });
         }
 
+        // Menu untuk Admin & SuperAdmin
         if (userRole === 'Admin' || userRole === 'SuperAdmin') {
             items.push({
                 title: 'Manajemen Periode',
                 href: '/admin/periods',
-                icon: Users,
+                icon: Users, // Using Users icon as generic management icon, or Calendar if available
+            });
+
+            items.push({
+                title: 'Manajemen Kriteria',
+                href: '/admin/criteria',
+                icon: Settings2,
+            });
+
+            items.push({
+                title: 'Manajemen Pegawai',
+                href: '/admin/employees',
+                icon: UserCog,
+            });
+
+            items.push({
+                title: 'Import Nilai SIKEP',
+                href: '/admin/sikep',
+                icon: FileSpreadsheet,
             });
         }
 

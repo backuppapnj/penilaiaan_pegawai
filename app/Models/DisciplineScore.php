@@ -37,6 +37,8 @@ class DisciplineScore extends Model
     protected $fillable = [
         'employee_id',
         'period_id',
+        'month',
+        'year',
         'total_work_days',
         'present_on_time',
         'leave_on_time',

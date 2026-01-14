@@ -17,14 +17,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Import SIKEP', href: '/admin/sikep' },
 ];
 
-interface Period {
-    id: number;
-    name: string;
-    semester: number;
-    year: number;
-    status: string;
-}
-
 interface RecentImport {
     id: number;
     employee: {
@@ -42,15 +34,18 @@ interface RecentImport {
 }
 
 interface PageProps {
-    periods: Period[];
+    months: Record<number, string>;
+    years: number[];
     recentImports: RecentImport[];
 }
 
 export default function SikepImportIndex({
-    periods,
+    months,
+    years,
     recentImports,
 }: PageProps) {
-    const [selectedPeriod, setSelectedPeriod] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState('');
+    const [selectedYear, setSelectedYear] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [uploadResult, setUploadResult] = useState<{
@@ -62,8 +57,8 @@ export default function SikepImportIndex({
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        if (!file || !selectedPeriod) {
-            alert('Silakan pilih periode dan file Excel');
+        if (!file || !selectedMonth || !selectedYear) {
+            alert('Silakan pilih bulan, tahun, dan file Excel');
             return;
         }
 
@@ -72,7 +67,8 @@ export default function SikepImportIndex({
 
         const formData = new FormData();
         formData.append('excel_file', file);
-        formData.append('period_id', selectedPeriod);
+        formData.append('month', selectedMonth);
+        formData.append('year', selectedYear);
 
         try {
             const response = await fetch('/admin/sikep', {
@@ -90,7 +86,8 @@ export default function SikepImportIndex({
 
             if (result.success) {
                 setFile(null);
-                setSelectedPeriod('');
+                setSelectedMonth('');
+                setSelectedYear('');
                 // Reload the page after successful upload
                 setTimeout(() => {
                     router.visit('/admin/sikep');
@@ -157,35 +154,52 @@ export default function SikepImportIndex({
                             </h2>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label
-                                        htmlFor="period"
-                                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                    >
-                                        Pilih Periode{' '}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        id="period"
-                                        value={selectedPeriod}
-                                        onChange={(e) =>
-                                            setSelectedPeriod(e.target.value)
-                                        }
-                                        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                        required
-                                    >
-                                        <option value="">
-                                            -- Pilih Periode --
-                                        </option>
-                                        {periods.map((period) => (
-                                            <option
-                                                key={period.id}
-                                                value={period.id}
-                                            >
-                                                {period.name} - {period.year}
-                                            </option>
-                                        ))}
-                                    </select>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor="month"
+                                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        >
+                                            Bulan <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            id="month"
+                                            value={selectedMonth}
+                                            onChange={(e) => setSelectedMonth(e.target.value)}
+                                            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                                            required
+                                        >
+                                            <option value="">-- Pilih Bulan --</option>
+                                            {Object.entries(months).map(([key, name]) => (
+                                                <option key={key} value={key}>
+                                                    {name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor="year"
+                                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        >
+                                            Tahun <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            id="year"
+                                            value={selectedYear}
+                                            onChange={(e) => setSelectedYear(e.target.value)}
+                                            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                                            required
+                                        >
+                                            <option value="">-- Pilih Tahun --</option>
+                                            {years.map((year) => (
+                                                <option key={year} value={year}>
+                                                    {year}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
@@ -307,7 +321,8 @@ export default function SikepImportIndex({
                                         disabled={
                                             uploading ||
                                             !file ||
-                                            !selectedPeriod
+                                            !selectedMonth ||
+                                            !selectedYear
                                         }
                                         className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                     >

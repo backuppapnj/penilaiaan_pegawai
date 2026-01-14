@@ -26,15 +26,24 @@ class ExcelImportController extends Controller
      */
     public function index(): Response
     {
-        $periods = Period::orderBy('year', 'desc')
-            ->orderBy('semester')
-            ->get(['id', 'name', 'semester', 'year', 'status']);
+        // $periods = Period::orderBy('year', 'desc')
+        //     ->orderBy('semester')
+        //     ->get(['id', 'name', 'semester', 'year', 'status']);
 
-        $recentImports = DisciplineScore::with(['employee:id,nama,nip,jabatan', 'period:id,name,year'])
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $currentYear = date('Y');
+        $years = range($currentYear - 1, $currentYear + 1);
+
+        $recentImports = DisciplineScore::with(['employee:id,nama,nip,jabatan'])
             ->orderByDesc('created_at')
             ->limit(10)
             ->get()
-            ->map(function ($score) {
+            ->map(function ($score) use ($months) {
                 return [
                     'id' => $score->id,
                     'employee' => [
@@ -43,8 +52,8 @@ class ExcelImportController extends Controller
                         'jabatan' => $score->employee->jabatan,
                     ],
                     'period' => [
-                        'name' => $score->period->name,
-                        'year' => $score->period->year,
+                        'name' => ($months[$score->month] ?? $score->month) . ' ' . $score->year,
+                        'year' => $score->year,
                     ],
                     'final_score' => $score->final_score,
                     'rank' => $score->rank,
@@ -53,7 +62,8 @@ class ExcelImportController extends Controller
             });
 
         return Inertia::render('Admin/SikepImport/Index', [
-            'periods' => $periods,
+            'months' => $months,
+            'years' => $years,
             'recentImports' => $recentImports,
         ]);
     }
@@ -65,15 +75,15 @@ class ExcelImportController extends Controller
     {
         try {
             $file = $request->file('excel_file');
-            $periodId = $request->input('period_id');
+            $month = (int) $request->input('month');
+            $year = (int) $request->input('year');
 
             // Store the file for backup/audit
-            $period = Period::findOrFail($periodId);
-            $fileName = "sikep_{$period->year}_{$period->semester}_".time().'.'.$file->getClientOriginalExtension();
+            $fileName = "sikep_{$year}_{$month}_".time().'.'.$file->getClientOriginalExtension();
             $file->storeAs('sikep-imports', $fileName, 'local');
 
             // Process the import
-            $result = $this->sikepService->import($file, $periodId);
+            $result = $this->sikepService->import($file, $month, $year);
 
             return response()->json([
                 'success' => true,
@@ -98,14 +108,25 @@ class ExcelImportController extends Controller
     public function scores(Request $request): JsonResponse
     {
         $request->validate([
-            'period_id' => ['required', 'integer', 'exists:periods,id'],
+            'month' => ['required', 'integer', 'between:1,12'],
+            'year' => ['required', 'integer'],
         ]);
 
-        $scores = DisciplineScore::with(['employee:id,nama,nip,jabatan', 'period:id,name'])
-            ->where('period_id', $request->input('period_id'))
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $month = (int) $request->input('month');
+        $year = (int) $request->input('year');
+
+        $scores = DisciplineScore::with(['employee:id,nama,nip,jabatan'])
+            ->where('month', $month)
+            ->where('year', $year)
             ->orderBy('rank')
             ->get()
-            ->map(function ($score) {
+            ->map(function ($score) use ($months) {
                 return [
                     'id' => $score->id,
                     'rank' => $score->rank,
@@ -115,7 +136,7 @@ class ExcelImportController extends Controller
                         'jabatan' => $score->employee->jabatan,
                     ],
                     'period' => [
-                        'name' => $score->period->name,
+                        'name' => ($months[$score->month] ?? $score->month) . ' ' . $score->year,
                     ],
                     'scores' => [
                         'score_1' => $score->score_1,
