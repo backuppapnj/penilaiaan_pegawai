@@ -111,7 +111,7 @@ class DashboardController extends Controller
                 'created_at' => $log->created_at->diffForHumans(),
             ]);
 
-        return $logs->toArray();
+        return is_array($logs) ? $logs : $logs->toArray();
     }
 
     /**
@@ -228,9 +228,9 @@ class DashboardController extends Controller
                 'name' => $announcedPeriod->name,
                 'year' => $announcedPeriod->year,
             ],
-            'winners' => $winners->toArray(),
-            'my_rankings' => $myRankings->toArray(),
-            'my_certificates' => $myCertificates->toArray(),
+            'winners' => is_array($winners) ? $winners : $winners->toArray(),
+            'my_rankings' => is_array($myRankings) ? $myRankings : $myRankings->toArray(),
+            'my_certificates' => is_array($myCertificates) ? $myCertificates : $myCertificates->toArray(),
         ];
     }
 
@@ -292,7 +292,7 @@ class DashboardController extends Controller
         }
 
         return [
-            'periods' => $periods->toArray(),
+            'periods' => is_array($periods) ? $periods : $periods->toArray(),
             'category_1_count' => $cat1Count,
             'category_2_count' => $cat2Count,
             'voting_progress' => $votingProgress,
@@ -352,15 +352,14 @@ class DashboardController extends Controller
             ]);
 
         return [
-            'has_active_period' => true,
-            'active_period' => [
+            'active_period' => $activePeriod ? [
                 'id' => $activePeriod->id,
                 'name' => $activePeriod->name,
                 'start_date' => $activePeriod->start_date->format('d M Y'),
                 'end_date' => $activePeriod->end_date->format('d M Y'),
-            ],
+            ] : null,
             'category_stats' => $categoryStats,
-            'recent_votes' => $recentVotes->toArray(),
+            'recent_votes' => is_array($recentVotes) ? $recentVotes : $recentVotes->toArray(),
         ];
     }
 
@@ -425,8 +424,8 @@ class DashboardController extends Controller
                 'name' => $announcedPeriod->name,
                 'year' => $announcedPeriod->year,
             ] : null,
-            'my_rankings' => $myRankings->toArray(),
-            'my_certificates' => $myCertificates->toArray(),
+            'my_rankings' => is_array($myRankings) ? $myRankings : $myRankings->toArray(),
+            'my_certificates' => is_array($myCertificates) ? $myCertificates : $myCertificates->toArray(),
         ];
     }
 }

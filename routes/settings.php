@@ -23,12 +23,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('settings.password.update');
 
     Route::get('settings/appearance', function () {
-        return Inertia::render('settings/appearance');
+        return Inertia::render('Settings/appearance');
     })->name('appearance.edit');
 
     // Password confirmation page
     Route::get('user/confirm-password', function () {
-        return Inertia::render('auth/confirm-password');
+        return Inertia::render('Auth/confirm-password');
     })->name('password.confirm');
 
     // Two-factor authentication (controller handles password confirmation middleware)

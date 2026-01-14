@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,12 +21,32 @@ class Period extends Model
         'notes',
     ];
 
+    protected $appends = [
+        'start_date_formatted',
+        'end_date_formatted',
+    ];
+
     protected function casts(): array
     {
         return [
+            'year' => 'integer',
             'start_date' => 'date',
             'end_date' => 'date',
         ];
+    }
+
+    public function getStartDateFormattedAttribute(): string
+    {
+        return $this->start_date 
+            ? Carbon::parse($this->start_date)->translatedFormat('d F Y') 
+            : '';
+    }
+
+    public function getEndDateFormattedAttribute(): string
+    {
+        return $this->end_date 
+            ? Carbon::parse($this->end_date)->translatedFormat('d F Y') 
+            : '';
     }
 
     public function votes(): HasMany

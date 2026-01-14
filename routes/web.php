@@ -34,6 +34,24 @@ Route::get('/reset-password/{token}', fn (Request $request) => Inertia::render('
     'token' => $request->route('token'),
 ]))->name('password.reset');
 
+// Registration route (GET for Wayfinder, POST handled by Fortify)
+Route::get('/register', fn () => Inertia::render('Auth/Register'))->name('register');
+
+// Two-Factor Challenge route (GET for Wayfinder, POST handled by Fortify)
+Route::get('/two-factor-challenge', function (Request $request) {
+    if (! $request->session()->has('login.id')) {
+        return redirect()->route('login');
+    }
+    return Inertia::render('Auth/TwoFactorChallenge');
+})->middleware(['guest'])->name('two-factor.login');
+
+// Email Verification route (GET for Wayfinder, POST handled by Fortify)
+Route::get('/email/verify', function (Request $request) {
+    return $request->user()->hasVerifiedEmail()
+        ? redirect()->route('dashboard-redirect')
+        : Inertia::render('Auth/VerifyEmail');
+})->middleware('auth')->name('verification.notice');
+
 Route::get('/verify/{certificateId}', [CertificateController::class, 'verify'])->name('certificates.verify');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -47,14 +65,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/penilai', [DashboardController::class, 'getStats'])->name('penilai.dashboard')->middleware('role:Penilai,Admin,SuperAdmin');
 
-    Route::get('/peserta', [DashboardController::class, 'getStats'])->name('peserta.dashboard')->middleware('role:Peserta,Admin,SuperAdmin');
+    Route::get('/peserta', [DashboardController::class, 'getStats'])->name('peserta.dashboard')->middleware('role:Peserta,Penilai,Admin,SuperAdmin');
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
     Route::prefix('api/dashboard')->name('api.dashboard.')->group(function () {
-        Route::get('/stats', [DashboardController::class, 'getStats']);
+        Route::get('/stats', [DashboardController::class, 'getStatsApi']);
         Route::get('/activity', [DashboardController::class, 'getActivity']);
         Route::get('/voting-progress', [DashboardController::class, 'getVotingProgress']);
         Route::get('/results', [DashboardController::class, 'getResults']);

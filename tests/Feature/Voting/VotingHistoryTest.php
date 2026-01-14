@@ -251,7 +251,7 @@ it('displays votes in descending order by creation date', function () {
 
     $response->assertStatus(200);
 
-    $votes = Vote::where('voter_id', $this->penilaiEmployee->id)
+    $votes = Vote::where('voter_id', $this->penilai->id)
         ->orderBy('created_at', 'desc')
         ->get();
 

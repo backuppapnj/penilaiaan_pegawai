@@ -32,8 +32,8 @@ class DisciplineScoreFactory extends Factory
         $finalScore = DisciplineScore::calculateFinalScore($score1, $score2, $score3);
 
         return [
-            'employee_id' => fake()->numberBetween(1, 30),
-            'period_id' => fake()->numberBetween(1, 10),
+            'employee_id' => \App\Models\Employee::factory(),
+            'period_id' => \App\Models\Period::factory(),
             'total_work_days' => $totalWorkDays,
             'present_on_time' => $presentOnTime,
             'leave_on_time' => $leaveOnTime,

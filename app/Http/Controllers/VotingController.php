@@ -51,11 +51,25 @@ class VotingController extends Controller
             ])
             ->get();
 
+        $eligibleEmployeeCounts = Employee::select('category_id', DB::raw('count(*) as total'))
+            ->where('id', '!=', $voterId)
+            ->whereNotNull('category_id')
+            ->whereNotIn('jabatan', [
+                'Ketua Pengadilan Tingkat Pertama Klas II',
+                'Wakil Ketua Tingkat Pertama',
+                'Hakim Tingkat Pertama',
+                'Panitera Tingkat Pertama Klas II',
+                'Sekretaris Tingkat Pertama Klas II',
+            ])
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
         return Inertia::render('Penilai/Voting/Index', [
             'activePeriod' => $activePeriod,
             'categories' => $categories,
             'employees' => $employees,
             'votedEmployees' => $votedEmployees,
+            'eligibleEmployeeCounts' => $eligibleEmployeeCounts,
         ]);
     }
 

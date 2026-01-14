@@ -49,7 +49,7 @@ it('excludes voted employees from the list', function () {
 
     Vote::factory()->create([
         'period_id' => $period->id,
-        'voter_id' => $this->penilaiEmployee->id,
+        'voter_id' => $this->penilai->id,
         'employee_id' => $employee->id,
         'category_id' => $category->id,
     ]);
@@ -96,7 +96,7 @@ it('displays only unvoted employees in voting form', function () {
 
     Vote::factory()->create([
         'period_id' => $period->id,
-        'voter_id' => $this->penilaiEmployee->id,
+        'voter_id' => $this->penilai->id,
         'employee_id' => $employee1->id,
         'category_id' => $category->id,
     ]);
@@ -131,7 +131,7 @@ it('allows penilai to submit votes for an employee', function () {
 
     $this->assertDatabaseHas('votes', [
         'period_id' => $period->id,
-        'voter_id' => $this->penilaiEmployee->id,
+        'voter_id' => $this->penilai->id,
         'employee_id' => $employee->id,
         'category_id' => $category->id,
     ]);
@@ -167,7 +167,7 @@ it('calculates total score correctly', function () {
         ]);
 
     $vote = Vote::where('period_id', $period->id)
-        ->where('voter_id', $this->penilaiEmployee->id)
+        ->where('voter_id', $this->penilai->id)
         ->where('employee_id', $employee->id)
         ->first();
 
@@ -392,7 +392,7 @@ it('creates vote details for each criterion', function () {
         ->assertRedirect();
 
     $vote = Vote::where('period_id', $period->id)
-        ->where('voter_id', $this->penilaiEmployee->id)
+        ->where('voter_id', $this->penilai->id)
         ->where('employee_id', $employee->id)
         ->first();
 

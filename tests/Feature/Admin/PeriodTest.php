@@ -32,8 +32,9 @@ it('displays periods on index page', function () {
 it('allows admin to view create period page', function () {
     $this->actingAs($this->admin)
         ->get(route('admin.periods.create'))
-        ->assertSuccessful();
-})->skip('Frontend pages not implemented - Create resources/js/Pages/Admin/Periods/Create.tsx');
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Admin/Periods/Create'));
+});
 
 it('allows admin to create a period', function () {
     $this->actingAs($this->admin)
@@ -163,16 +164,18 @@ it('allows admin to view period detail', function () {
 
     $this->actingAs($this->admin)
         ->get(route('admin.periods.show', $period))
-        ->assertSuccessful();
-})->skip('Frontend pages not implemented - Create resources/js/Pages/Admin/Periods/Show.tsx');
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Admin/Periods/Show'));
+});
 
 it('allows admin to view edit period page', function () {
     $period = Period::factory()->create(['status' => 'draft']);
 
     $this->actingAs($this->admin)
         ->get(route('admin.periods.edit', $period))
-        ->assertSuccessful();
-})->skip('Frontend pages not implemented - Create resources/js/Pages/Admin/Periods/Edit.tsx');
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Admin/Periods/Edit'));
+});
 
 it('allows admin to edit a period', function () {
     $period = Period::factory()->create([

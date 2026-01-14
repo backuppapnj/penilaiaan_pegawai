@@ -1,12 +1,18 @@
 {
     "mcpServers": {
-        "laravel-boost": {
-            "command": "wsl.exe",
-            "args": [
-                "/usr/bin/php8.4",
-                "/home/moohard/project/vote_system/artisan",
-                "boost:mcp"
-            ]
-        }
+    "mcp-omnisearch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-omnisearch"
+      ],
+      "env": {
+        "TAVILY_API_KEY": "",
+        "BRAVE_API_KEY": "",
+        "KAGI_API_KEY": "",
+        "PERPLEXITY_API_KEY": "",
+        "JINA_AI_API_KEY": ""
+      }
+    }
     }
 }

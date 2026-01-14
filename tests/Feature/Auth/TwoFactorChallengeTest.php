@@ -33,13 +33,13 @@ test('two factor challenge can be rendered', function () {
     ])->save();
 
     $this->post(route('login'), [
-        'email' => $user->email,
+        'nip' => $user->nip,
         'password' => 'password',
     ]);
 
     $this->get(route('two-factor.login'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('auth/two-factor-challenge')
+            ->component('Auth/TwoFactorChallenge')
         );
 });

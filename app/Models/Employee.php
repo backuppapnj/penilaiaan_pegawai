@@ -41,6 +41,14 @@ class Employee extends Model
     }
 
     /**
+     * Get the user associated with the employee.
+     */
+    public function user(): HasOne
+    {
+        return $this->hasOne(User::class);
+    }
+
+    /**
      * Get the category that the employee belongs to.
      */
     public function category(): BelongsTo

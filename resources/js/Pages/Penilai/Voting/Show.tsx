@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 
@@ -43,6 +43,8 @@ interface PageProps {
         name: string;
         start_date: string;
         end_date: string;
+        start_date_formatted: string;
+        end_date_formatted: string;
     };
     category: Category;
     criteria: Criterion[];
@@ -60,13 +62,8 @@ export default function VotingShow({
     );
     const [scores, setScores] = useState<Record<number, number>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const { setData, post, processing, recentlySuccessful } = useForm({
-        period_id: period.id,
-        employee_id: null as number | null,
-        category_id: category.id,
-        scores: [] as Array<{ criterion_id: number; score: number }>,
-    });
+    const [processing, setProcessing] = useState(false);
+    const [recentlySuccessful, setRecentlySuccessful] = useState(false);
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -93,20 +90,31 @@ export default function VotingShow({
             score: scores[criterion.id] || 0,
         }));
 
-        setData({
-            period_id: period.id,
-            employee_id: selectedEmployee,
-            category_id: category.id,
-            scores: scoresData,
-        });
-
-        post('/penilai/voting', {
-            onSuccess: () => {
-                setSelectedEmployee(null);
-                setScores({});
-                setErrors({});
+        setProcessing(true);
+        router.post(
+            '/penilai/voting',
+            {
+                period_id: period.id,
+                employee_id: selectedEmployee,
+                category_id: category.id,
+                scores: scoresData,
             },
-        });
+            {
+                onSuccess: () => {
+                    setSelectedEmployee(null);
+                    setScores({});
+                    setErrors({});
+                    setRecentlySuccessful(true);
+                    setTimeout(() => setRecentlySuccessful(false), 3000);
+                },
+                onFinish: () => setProcessing(false),
+                onError: (err) => {
+                    // Type assertion untuk error object
+                    const errorMap = err as Record<string, string>;
+                    setErrors(errorMap);
+                },
+            },
+        );
     };
 
     const handleScoreChange = (criterionId: number, value: string) => {

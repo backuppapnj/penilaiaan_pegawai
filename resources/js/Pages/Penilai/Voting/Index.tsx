@@ -42,16 +42,20 @@ interface PageProps {
         name: string;
         start_date: string;
         end_date: string;
+        start_date_formatted: string;
+        end_date_formatted: string;
     } | null;
     categories: Category[];
     employees: Employee[];
     votedEmployees: number[];
+    eligibleEmployeeCounts: Record<number, number>;
 }
 
 export default function VotingIndex({
     activePeriod,
     categories,
     employees,
+    eligibleEmployeeCounts,
 }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -89,8 +93,8 @@ export default function VotingIndex({
                                         {activePeriod.name}
                                     </h3>
                                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                                        {activePeriod.start_date} -{' '}
-                                        {activePeriod.end_date}
+                                        {activePeriod.start_date_formatted} -{' '}
+                                        {activePeriod.end_date_formatted}
                                     </p>
                                 </div>
                             </div>
@@ -113,9 +117,15 @@ export default function VotingIndex({
                                         (emp) =>
                                             emp.category?.id === category.id,
                                     );
-                                    const totalEmployees =
+                                    const remainingCount =
                                         categoryEmployees.length;
-                                    const isCompleted = totalEmployees === 0;
+                                    const eligibleCount =
+                                        eligibleEmployeeCounts[category.id] ||
+                                        0;
+                                    const isFullyCompleted =
+                                        eligibleCount > 0 &&
+                                        remainingCount === 0;
+                                    const isEmpty = eligibleCount === 0;
 
                                     return (
                                         <div
@@ -132,7 +142,15 @@ export default function VotingIndex({
                                                             'Tidak ada deskripsi'}
                                                     </p>
                                                     <div className="mt-4 flex items-center gap-2 text-sm">
-                                                        {isCompleted ? (
+                                                        {isEmpty ? (
+                                                            <>
+                                                                <AlertCircle className="size-4 text-gray-400" />
+                                                                <span className="text-gray-500">
+                                                                    Tidak ada
+                                                                    pegawai
+                                                                </span>
+                                                            </>
+                                                        ) : isFullyCompleted ? (
                                                             <>
                                                                 <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
                                                                 <span className="text-green-600 dark:text-green-400">
@@ -145,7 +163,7 @@ export default function VotingIndex({
                                                                 <Clock className="size-4 text-amber-600 dark:text-amber-400" />
                                                                 <span className="text-gray-600 dark:text-gray-400">
                                                                     {
-                                                                        totalEmployees
+                                                                        remainingCount
                                                                     }{' '}
                                                                     pegawai
                                                                     belum
@@ -159,12 +177,21 @@ export default function VotingIndex({
 
                                             <Link
                                                 href={`/penilai/voting/${activePeriod.id}/${category.id}`}
-                                                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                                aria-label={`Mulai menilai kategori ${category.nama}`}
+                                                className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                                                    isEmpty
+                                                        ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'
+                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                }`}
+                                                onClick={(e) => {
+                                                    if (isEmpty)
+                                                        e.preventDefault();
+                                                }}
                                             >
-                                                {isCompleted
-                                                    ? 'Lihat Hasil'
-                                                    : 'Mulai Menilai'}
+                                                {isEmpty
+                                                    ? 'Kosong'
+                                                    : isFullyCompleted
+                                                      ? 'Lihat Hasil'
+                                                      : 'Mulai Menilai'}
                                             </Link>
                                         </div>
                                     );
