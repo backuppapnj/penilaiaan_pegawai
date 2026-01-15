@@ -49,6 +49,7 @@ interface PageProps {
     employees: Employee[];
     votedEmployees: number[];
     eligibleEmployeeCounts: Record<number, number>;
+    remainingCounts: Record<number, number>;
 }
 
 export default function VotingIndex({
@@ -56,6 +57,7 @@ export default function VotingIndex({
     categories,
     employees,
     eligibleEmployeeCounts,
+    remainingCounts,
 }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -113,12 +115,8 @@ export default function VotingIndex({
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                 {categories.map((category) => {
-                                    const categoryEmployees = employees.filter(
-                                        (emp) =>
-                                            emp.category?.id === category.id,
-                                    );
                                     const remainingCount =
-                                        categoryEmployees.length;
+                                        remainingCounts[category.id] || 0;
                                     const eligibleCount =
                                         eligibleEmployeeCounts[category.id] ||
                                         0;
