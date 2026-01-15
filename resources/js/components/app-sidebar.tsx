@@ -10,7 +10,6 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -31,11 +30,27 @@ export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const userRole = auth.user?.role;
 
+    // Get dashboard route based on user role
+    const getDashboardRoute = (): string => {
+        switch (userRole) {
+            case 'SuperAdmin':
+                return '/super-admin';
+            case 'Admin':
+                return '/admin';
+            case 'Penilai':
+                return '/penilai';
+            case 'Peserta':
+                return '/peserta';
+            default:
+                return '/dashboard-redirect';
+        }
+    };
+
     const getMainNavItems = (): NavItem[] => {
         const items: NavItem[] = [
             {
                 title: 'Dashboard',
-                href: dashboard(),
+                href: getDashboardRoute(),
                 icon: LayoutGrid,
             },
         ];
@@ -125,7 +140,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={getDashboardRoute()} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

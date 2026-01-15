@@ -30,20 +30,11 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useActiveUrl } from '@/hooks/use-active-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn, toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
 
 const rightNavItems: NavItem[] = [
     {
@@ -68,6 +59,32 @@ interface AppHeaderProps {
 export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
+    const userRole = auth.user?.role;
+
+    // Get dashboard route based on user role
+    const getDashboardRoute = (): string => {
+        switch (userRole) {
+            case 'SuperAdmin':
+                return '/super-admin';
+            case 'Admin':
+                return '/admin';
+            case 'Penilai':
+                return '/penilai';
+            case 'Peserta':
+                return '/peserta';
+            default:
+                return '/dashboard-redirect';
+        }
+    };
+
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: getDashboardRoute(),
+            icon: LayoutGrid,
+        },
+    ];
+
     const getInitials = useInitials();
     const { urlIsActive } = useActiveUrl();
     return (
@@ -142,7 +159,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     </div>
 
                     <Link
-                        href={dashboard()}
+                        href={getDashboardRoute()}
                         prefetch
                         className="flex items-center space-x-2"
                     >

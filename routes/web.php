@@ -42,6 +42,7 @@ Route::get('/two-factor-challenge', function (Request $request) {
     if (! $request->session()->has('login.id')) {
         return redirect()->route('login');
     }
+
     return Inertia::render('Auth/TwoFactorChallenge');
 })->middleware(['guest'])->name('two-factor.login');
 
@@ -66,10 +67,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/penilai', [DashboardController::class, 'getStats'])->name('penilai.dashboard')->middleware('role:Penilai,Admin,SuperAdmin');
 
     Route::get('/peserta', [DashboardController::class, 'getStats'])->name('peserta.dashboard')->middleware('role:Peserta,Penilai,Admin,SuperAdmin');
-
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
 
     Route::prefix('api/dashboard')->name('api.dashboard.')->group(function () {
         Route::get('/stats', [DashboardController::class, 'getStatsApi']);
