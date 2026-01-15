@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CategoryAndCriteriaSeeder::class,
             EmployeeSeeder::class,
+            AttendanceSeeder::class,
         ]);
     }
 }
