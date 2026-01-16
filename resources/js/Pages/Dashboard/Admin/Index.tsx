@@ -2,7 +2,7 @@ import StatCard from '@/components/dashboard/stat-card';
 import StatusBadge from '@/components/dashboard/status-badge';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
-import { Award, Calendar, FileText, Upload, Users } from 'lucide-react';
+import { Award, Calendar, FileText, Upload, Users, Vote } from 'lucide-react';
 
 const breadcrumbs = [
     {
@@ -35,19 +35,38 @@ interface PageProps {
 }
 
 export default function AdminDashboard({ stats }: PageProps) {
+    const activePeriod =
+        stats.periods.find((period) => period.status === 'open') ?? null;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin Dashboard" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                        Admin Dashboard
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Kelola periode penilaian, import data, dan verifikasi
-                        hasil.
-                    </p>
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                            Admin Dashboard
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Kelola periode penilaian, import data, dan verifikasi
+                            hasil.
+                        </p>
+                    </div>
+                    {stats.has_active_period && activePeriod && (
+                        <div className="flex flex-col items-start gap-2">
+                            <Link
+                                href="/penilai/voting"
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                            >
+                                <Vote className="size-4" />
+                                Mulai Menilai
+                            </Link>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Periode aktif: {activePeriod.name}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">

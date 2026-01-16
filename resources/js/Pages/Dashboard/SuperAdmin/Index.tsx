@@ -38,14 +38,30 @@ export default function SuperAdminDashboard({
             <Head title="Super Admin Dashboard" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                        Super Admin Dashboard
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Selamat datang di panel administrasi sistem penilaian
-                        pegawai.
-                    </p>
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                            Super Admin Dashboard
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Selamat datang di panel administrasi sistem penilaian
+                            pegawai.
+                        </p>
+                    </div>
+                    {stats.active_periods > 0 && (
+                        <div className="flex flex-col items-start gap-2">
+                            <Link
+                                href="/penilai/voting"
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                            >
+                                <Vote className="size-4" />
+                                Mulai Menilai
+                            </Link>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Periode aktif tersedia
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-4">

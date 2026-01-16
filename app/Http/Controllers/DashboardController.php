@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
-use App\Models\Certificate;
 use App\Models\Category;
+use App\Models\Certificate;
 use App\Models\Employee;
 use App\Models\Period;
 use App\Models\Vote;
@@ -120,9 +120,10 @@ class DashboardController extends Controller
     public function getVotingProgress(Request $request): array
     {
         $user = Auth::user();
+        $employeeId = $user?->employee?->id;
         $activePeriod = Period::where('status', 'open')->first();
 
-        if (!$activePeriod) {
+        if (! $activePeriod) {
             return [
                 'active_period' => null,
                 'category_1' => ['completed' => 0, 'total' => 0, 'status' => 'pending'],
@@ -130,7 +131,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $categories = Category::with(['employees' => fn ($q) => $q->where('user_id', '!=', $user->id)])
+        $categories = Category::with(['employees' => fn ($q) => $q
+            ->when($employeeId, fn ($query) => $query->where('id', '!=', $employeeId))])
             ->whereIn('id', [1, 2])
             ->get();
 
@@ -170,7 +172,7 @@ class DashboardController extends Controller
             ->latest()
             ->first();
 
-        if (!$announcedPeriod) {
+        if (! $announcedPeriod) {
             return [
                 'period' => null,
                 'winners' => [],
@@ -306,16 +308,19 @@ class DashboardController extends Controller
     protected function getPenilaiStatsData($user): array
     {
         $activePeriod = Period::where('status', 'open')->first();
+        $employeeId = $user?->employee?->id;
 
-        if (!$activePeriod) {
+        if (! $activePeriod) {
             return [
                 'has_active_period' => false,
                 'active_period' => null,
+                'category_stats' => [],
                 'recent_votes' => [],
             ];
         }
 
-        $categories = Category::with(['employees' => fn ($q) => $q->where('user_id', '!=', $user->id)])
+        $categories = Category::with(['employees' => fn ($q) => $q
+            ->when($employeeId, fn ($query) => $query->where('id', '!=', $employeeId))])
             ->whereIn('id', [1, 2])
             ->get();
 
@@ -352,6 +357,7 @@ class DashboardController extends Controller
             ]);
 
         return [
+            'has_active_period' => true,
             'active_period' => $activePeriod ? [
                 'id' => $activePeriod->id,
                 'name' => $activePeriod->name,
@@ -369,6 +375,7 @@ class DashboardController extends Controller
     protected function getPesertaStatsData($user): array
     {
         $employee = $user->employee;
+        $activePeriod = Period::where('status', 'open')->first();
 
         $announcedPeriod = Period::where('status', 'announced')
             ->latest()
@@ -418,6 +425,13 @@ class DashboardController extends Controller
 
         return [
             'profile' => $profile,
+            'has_active_period' => (bool) $activePeriod,
+            'active_period' => $activePeriod ? [
+                'id' => $activePeriod->id,
+                'name' => $activePeriod->name,
+                'start_date' => $activePeriod->start_date->format('d M Y'),
+                'end_date' => $activePeriod->end_date->format('d M Y'),
+            ] : null,
             'has_announced_period' => (bool) $announcedPeriod,
             'announced_period' => $announcedPeriod ? [
                 'id' => $announcedPeriod->id,

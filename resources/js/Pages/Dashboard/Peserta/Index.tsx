@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
-import { AlertCircle, Award, Download, Trophy, User } from 'lucide-react';
+import { AlertCircle, Award, Download, Trophy, User, Vote } from 'lucide-react';
 
 const breadcrumbs = [
     {
@@ -34,6 +34,13 @@ interface PageProps {
             unit_kerja: string;
             kategori: string;
         } | null;
+        has_active_period: boolean;
+        active_period: {
+            id: number;
+            name: string;
+            start_date: string;
+            end_date: string;
+        } | null;
         has_announced_period: boolean;
         announced_period: {
             id: number;
@@ -47,20 +54,37 @@ interface PageProps {
 
 export default function PesertaDashboard({ stats }: PageProps) {
     const announcedPeriod = stats.announced_period;
+    const activePeriod = stats.active_period;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Peserta Dashboard" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                        Dashboard Peserta
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Lihat hasil penilaian dan peringkat Anda setelah
-                        pengumuman.
-                    </p>
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                            Dashboard Peserta
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Lihat hasil penilaian dan peringkat Anda setelah
+                            pengumuman.
+                        </p>
+                    </div>
+                    {stats.has_active_period && activePeriod && (
+                        <div className="flex flex-col items-start gap-2">
+                            <Link
+                                href="/penilai/voting"
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                            >
+                                <Vote className="size-4" />
+                                Mulai Menilai
+                            </Link>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Periode aktif: {activePeriod.name}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {stats.profile && (
