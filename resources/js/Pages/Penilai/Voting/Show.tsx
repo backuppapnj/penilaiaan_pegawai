@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Award, CheckCircle2, Loader2, TrendingUp } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { type SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -97,6 +97,7 @@ export default function VotingShow({
     const [processing, setProcessing] = useState(false);
     const [recentlySuccessful, setRecentlySuccessful] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const criteriaSectionRef = useRef<HTMLDivElement>(null);
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -179,6 +180,29 @@ export default function VotingShow({
             });
         }
     };
+
+    useEffect(() => {
+        if (!selectedEmployee) {
+            return;
+        }
+
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        if (!window.matchMedia('(max-width: 768px)').matches) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            criteriaSectionRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        }, 50);
+
+        return () => window.clearTimeout(timeout);
+    }, [selectedEmployee]);
 
     const totalScore = Object.values(scores).reduce(
         (sum, score) => sum + (typeof score === 'number' ? score : 0),
@@ -554,7 +578,10 @@ export default function VotingShow({
 
                         {selectedEmployee && (
                             <>
-                                <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 dark:border-sidebar-border dark:bg-gray-900">
+                                <div
+                                    ref={criteriaSectionRef}
+                                    className="scroll-mt-24 rounded-xl border border-sidebar-border/70 bg-white p-6 dark:border-sidebar-border dark:bg-gray-900"
+                                >
                                     <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
                                         Kriteria Penilaian
                                     </h2>
