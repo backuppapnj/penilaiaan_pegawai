@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { confirm } from '@/routes/password';
+import { store as confirmPassword } from '@/routes/password/confirm';
 import { Form, Head } from '@inertiajs/react';
 import { useRef } from 'react';
 
@@ -33,7 +33,7 @@ export default function ConfirmPassword({ status }: ConfirmPasswordProps) {
             </div>
 
             <Form
-                {...confirm.form()}
+                {...confirmPassword.form()}
                 id="confirm-password-form"
                 resetOnSuccess
                 className="flex flex-col gap-6"

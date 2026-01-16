@@ -9,6 +9,8 @@ import AuthLayout from '@/layouts/auth-layout';
 import { store } from '@/routes/login';
 import { email } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 
 interface LoginProps {
     status?: string;
@@ -16,6 +18,8 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <AuthLayout
             title="Login Sistem Penilaian Pegawai"
@@ -70,15 +74,41 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         </TextLink>
                                     )}
                                 </div>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    name="password"
-                                    required
-                                    tabIndex={2}
-                                    autoComplete="current-password"
-                                    placeholder="Masukkan password"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        name="password"
+                                        required
+                                        tabIndex={2}
+                                        autoComplete="current-password"
+                                        placeholder="Masukkan password"
+                                        className="pr-20"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowPassword((prev) => !prev)
+                                        }
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+                                        aria-label={
+                                            showPassword
+                                                ? 'Sembunyikan password'
+                                                : 'Lihat password'
+                                        }
+                                    >
+                                        {showPassword ? (
+                                            <span className="inline-flex items-center gap-1">
+                                                <EyeOff className="size-4" />{' '}
+                                                Sembunyikan
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1">
+                                                <Eye className="size-4" /> Lihat
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
                                 <InputError message={errors.password} />
                             </div>
 
