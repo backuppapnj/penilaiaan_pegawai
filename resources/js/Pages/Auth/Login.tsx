@@ -116,13 +116,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 </div>
             )}
 
-            <div className="mt-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-                <p className="text-center text-sm text-blue-800 dark:text-blue-300">
-                    <strong>Informasi:</strong> Gunakan NIP sebagai username dan
-                    password default adalah NIP Anda. Ganti password setelah
-                    login pertama.
-                </p>
-            </div>
         </AuthLayout>
     );
 }
