@@ -109,7 +109,7 @@ class DisciplineScore extends Model
      *
      * Formula: [100 - Total Penalti (G-K, N-R)] × 0.35
      */
-    public static function calculateScore2(int $lateMinutes, int $earlyLeaveMinutes): float
+    public static function calculateScore2(float $lateMinutes, float $earlyLeaveMinutes): float
     {
         $totalPenalty = $lateMinutes + $earlyLeaveMinutes;
 

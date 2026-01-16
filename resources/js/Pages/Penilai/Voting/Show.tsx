@@ -1,8 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { AlertCircle, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { AlertCircle, ArrowLeft, Award, CheckCircle2, Loader2, TrendingUp } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
+import { type SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -37,6 +38,27 @@ interface Employee {
     category: Category;
 }
 
+interface VoteDetail {
+    id: number;
+    vote_id: number;
+    criterion_id: number | string;
+    score: number | string | null;
+    criterion: Criterion;
+}
+
+interface AutomaticVote {
+    id: number;
+    employee_id: number;
+    total_score: number | string | null;
+    employee: Employee;
+    voteDetails?: VoteDetail[];
+    vote_details?: VoteDetail[];
+    voter: {
+        id: number;
+        name: string;
+    };
+}
+
 interface PageProps {
     period: {
         id: number;
@@ -49,6 +71,9 @@ interface PageProps {
     category: Category;
     criteria: Criterion[];
     employees: Employee[];
+    isAutomaticVoting: boolean;
+    automaticVotes: AutomaticVote[] | null;
+    isResultsLocked?: boolean;
 }
 
 export default function VotingShow({
@@ -56,7 +81,13 @@ export default function VotingShow({
     category,
     criteria,
     employees,
+    isAutomaticVoting,
+    automaticVotes,
+    isResultsLocked,
 }: PageProps) {
+    const { auth } = usePage<SharedData>().props;
+    const userRole = auth.user?.role;
+    const isAdmin = userRole === 'Admin' || userRole === 'SuperAdmin';
     const [selectedEmployee, setSelectedEmployee] = useState<number | null>(
         null,
     );
@@ -64,6 +95,7 @@ export default function VotingShow({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
     const [recentlySuccessful, setRecentlySuccessful] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -138,6 +170,34 @@ export default function VotingShow({
     );
     const averageScore = criteria.length > 0 ? totalScore / criteria.length : 0;
     const allCriteriaRated = criteria.every((criterion) => scores[criterion.id]);
+    const isDisciplineCategory = category.id === 3;
+
+    const normalizeScore = (value: unknown): number => {
+        if (typeof value === 'number') {
+            return Number.isFinite(value) ? value : 0;
+        }
+        const parsed = Number.parseFloat(String(value));
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const formatScore = (value: unknown): string => {
+        if (value === null || value === undefined || value === '') {
+            return '-';
+        }
+        const parsed = typeof value === 'number' ? value : Number.parseFloat(String(value));
+        return Number.isFinite(parsed) ? parsed.toFixed(2) : '-';
+    };
+
+    const handleGenerateAutomaticVotes = (overwrite = false) => {
+        setIsGenerating(true);
+        router.post(
+            `/penilai/voting/${period.id}/${category.id}/generate`,
+            { overwrite },
+            {
+                onFinish: () => setIsGenerating(false),
+            },
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -174,7 +234,215 @@ export default function VotingShow({
                     </div>
                 )}
 
-                {employees.length === 0 ? (
+                {/* Automatic Voting Results */}
+                {isAutomaticVoting && automaticVotes && automaticVotes.length > 0 ? (
+                    <div className="space-y-6">
+                        <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-900 dark:bg-blue-950">
+                            <div className="flex items-start gap-4">
+                                <Award className="size-6 text-blue-600 dark:text-blue-400 mt-1" />
+                                <div className="flex-1">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                                            Voting Otomatis Pegawai Disiplin
+                                        </h2>
+                                        {isAdmin && isDisciplineCategory && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleGenerateAutomaticVotes(true)}
+                                                disabled={isGenerating}
+                                                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                {isGenerating ? (
+                                                    <>
+                                                        <Loader2 className="size-3 animate-spin" />
+                                                        Menghasilkan...
+                                                    </>
+                                                ) : (
+                                                    'Generate Ulang (Overwrite)'
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p className="mt-2 text-sm text-blue-800 dark:text-blue-200">
+                                        Penilaian untuk kategori ini dilakukan secara otomatis berdasarkan data kehadiran dari SIKEP.
+                                        Berikut adalah hasil voting yang telah di-generate secara otomatis:
+                                    </p>
+                                    <div className="mt-4 grid gap-4 md:grid-cols-3">
+                                        <div className="rounded-lg bg-white p-3 dark:bg-gray-900">
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Total Pegawai Dinilai</p>
+                                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                {automaticVotes.length}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-lg bg-white p-3 dark:bg-gray-900">
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Rata-rata Skor</p>
+                                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                {(automaticVotes.reduce((sum, vote) => sum + normalizeScore(vote.total_score), 0) / automaticVotes.length).toFixed(2)}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-lg bg-white p-3 dark:bg-gray-900">
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Skor Tertinggi</p>
+                                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                                {Math.max(...automaticVotes.map((vote) => normalizeScore(vote.total_score))).toFixed(2)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Automatic Votes Table */}
+                        <div className="rounded-xl border border-sidebar-border/70 bg-white dark:border-sidebar-border dark:bg-gray-900">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gray-50 dark:bg-gray-800">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                                Peringkat
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                                Nama Pegawai
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                                NIP
+                                            </th>
+                                            {criteria.map((criterion) => (
+                                                <th key={criterion.id} className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                                    {criterion.nama}
+                                                    <span className="block text-xs font-normal">({criterion.bobot}%)</span>
+                                                </th>
+                                            ))}
+                                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                                Total Skor
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                                        {automaticVotes.map((vote, index) => (
+                                            <tr
+                                                key={vote.id}
+                                                className={index < 3 ? 'bg-green-50 dark:bg-green-950' : ''}
+                                            >
+                                                <td className="whitespace-nowrap px-6 py-4">
+                                                    {index === 0 && (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                                            <TrendingUp className="size-4" />
+                                                            #{index + 1}
+                                                        </span>
+                                                    )}
+                                                    {index === 1 && (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                                            #{index + 1}
+                                                        </span>
+                                                    )}
+                                                    {index === 2 && (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                                            #{index + 1}
+                                                        </span>
+                                                    )}
+                                                    {index > 2 && (
+                                                        <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                                                            #{index + 1}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="whitespace-nowrap px-6 py-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                            {vote.employee.nama}
+                                                        </span>
+                                                        {index < 3 && (
+                                                            <Award className="size-4 text-yellow-600 dark:text-yellow-400" />
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                                    {vote.employee.nip}
+                                                </td>
+                                                {criteria.map((criterion) => {
+                                                    const voteDetails =
+                                                        vote.voteDetails ??
+                                                        vote.vote_details ??
+                                                        [];
+                                                    const detail = voteDetails.find(
+                                                        (d) => Number(d.criterion_id) === criterion.id
+                                                    );
+                                                    return (
+                                                        <td
+                                                            key={criterion.id}
+                                                            className="whitespace-nowrap px-6 py-4 text-sm"
+                                                        >
+                                                            <span
+                                                                className={`inline-flex rounded-lg px-3 py-1 font-medium ${
+                                                                    detail && detail.score >= 80
+                                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                                        : detail && detail.score >= 60
+                                                                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                                }`}
+                                                            >
+                                                                {detail ? formatScore(detail.score) : '-'}
+                                                            </span>
+                                                        </td>
+                                                    );
+                                                })}
+                                                <td className="whitespace-nowrap px-6 py-4">
+                                                    <span className="inline-flex rounded-lg bg-blue-100 px-4 py-2 text-lg font-bold text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                        {formatScore(vote.total_score)}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-800">
+                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                <strong>Catatan:</strong> Voting ini di-generate secara otomatis berdasarkan data kehadiran bulanan dari SIKEP.
+                                Data di-update setiap hari jam 01:00. Untuk informasi lebih lanjut, hubungi administrator.
+                            </p>
+                        </div>
+                    </div>
+                ) : isAutomaticVoting ? (
+                    <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-8 text-center dark:border-yellow-900 dark:bg-yellow-950">
+                        <AlertCircle className="mx-auto mb-4 size-12 text-yellow-600 dark:text-yellow-400" />
+                        <h2 className="mb-2 text-xl font-semibold text-yellow-900 dark:text-yellow-100">
+                            {isResultsLocked
+                                ? 'Menunggu Pengumuman'
+                                : 'Belum Ada Data Voting Otomatis'}
+                        </h2>
+                        <p className="text-yellow-800 dark:text-yellow-200">
+                            {isResultsLocked
+                                ? 'Hasil voting otomatis akan ditampilkan setelah periode diumumkan.'
+                                : `Voting otomatis untuk Pegawai Disiplin belum di-generate.${
+                                      isAdmin
+                                          ? ' Silakan generate data di bawah ini.'
+                                          : ' Silakan tunggu administrator untuk generate data.'
+                                  }`}
+                        </p>
+                        {isAdmin && isDisciplineCategory && !isResultsLocked && (
+                            <div className="mt-6 flex justify-center">
+                                <button
+                                    type="button"
+                                    onClick={() => handleGenerateAutomaticVotes(true)}
+                                    disabled={isGenerating}
+                                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="size-4 animate-spin" />
+                                            Menghasilkan...
+                                        </>
+                                    ) : (
+                                        'Generate Ulang (Overwrite)'
+                                    )}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ) : employees.length === 0 ? (
                     <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-8 text-center dark:border-yellow-900 dark:bg-yellow-950">
                         <AlertCircle className="mx-auto mb-4 size-12 text-yellow-600 dark:text-yellow-400" />
                         <h2 className="mb-2 text-xl font-semibold text-yellow-900 dark:text-yellow-100">

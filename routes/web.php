@@ -130,6 +130,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{period}/{category}', [VotingController::class, 'show'])->name('show');
             Route::post('/', [VotingController::class, 'store'])->name('store');
             Route::get('/history', [VotingController::class, 'history'])->name('history');
+            Route::post('/{period}/{category}/generate', [VotingController::class, 'generateAutomaticDisciplineVotes'])
+                ->middleware('role:Admin,SuperAdmin')
+                ->name('generate-automatic');
         });
     });
 });

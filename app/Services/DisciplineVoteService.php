@@ -36,18 +36,28 @@ class DisciplineVoteService
         $failed = 0;
         $errors = [];
 
-        // Get discipline scores for this period (or without period)
-        $disciplineScores = DisciplineScore::where('period_id', $periodId)
+        // Get all discipline scores for this period (or without period)
+        $allDisciplineScores = DisciplineScore::where('period_id', $periodId)
             ->orWhereNull('period_id')
             ->get();
 
-        if ($disciplineScores->isEmpty()) {
+        if ($allDisciplineScores->isEmpty()) {
             return [
                 'success' => 0,
                 'failed' => 0,
                 'errors' => ['Tidak ada data discipline_scores untuk periode ini'],
             ];
         }
+
+        // Get only the latest score for each employee (by year and month)
+        $disciplineScores = $allDisciplineScores
+            ->sortByDesc('year')
+            ->sortByDesc('month')
+            ->groupBy('employee_id')
+            ->map(function ($group) {
+                return $group->first();
+            })
+            ->values();
 
         // Get voter - use admin if not specified
         if ($voterId === null) {
@@ -84,15 +94,16 @@ class DisciplineVoteService
         try {
             foreach ($disciplineScores as $disciplineScore) {
                 try {
-                    // Check if vote already exists
+                    // Check if vote already exists from ANY voter (not just current voter)
+                    // This prevents duplicate votes for automatic discipline voting
                     $existingVote = Vote::where('period_id', $periodId)
-                        ->where('voter_id', $voterId)
                         ->where('employee_id', $disciplineScore->employee_id)
                         ->where('category_id', $this->disciplineCategoryId)
                         ->first();
 
                     if ($existingVote && ! ($options['overwrite'] ?? false)) {
-                        $errors[] = "Vote sudah ada untuk employee {$disciplineScore->employee_id}";
+                        $existingVoter = \App\Models\User::find($existingVote->voter_id);
+                        $errors[] = "Vote sudah ada untuk employee {$disciplineScore->employee_id} (oleh voter: {$existingVote->voter_id})";
                         $failed++;
 
                         continue;

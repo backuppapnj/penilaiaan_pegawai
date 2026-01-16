@@ -8,7 +8,9 @@ use App\Models\Employee;
 use App\Models\Period;
 use App\Models\Vote;
 use App\Models\VoteDetail;
+use App\Services\DisciplineVoteService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -132,6 +134,23 @@ class VotingController extends Controller
         $userId = auth()->id();
         $employeeId = auth()->user()?->employee?->id;
 
+        $disciplineCategoryId = 3;
+        $isAutomaticVoting = $category->id === $disciplineCategoryId;
+        $user = auth()->user();
+        $isAdmin = $user?->hasRole('Admin', 'SuperAdmin') ?? false;
+        $isResultsLocked = $isAutomaticVoting && ! $isAdmin && $period->status !== 'announced';
+
+        // For automatic voting, get all generated votes
+        $automaticVotes = null;
+        if ($isAutomaticVoting && ! $isResultsLocked) {
+            $automaticVotes = Vote::where('period_id', $period->id)
+                ->where('category_id', $category->id)
+                ->with(['employee', 'voteDetails.criterion', 'voter'])
+                ->get()
+                ->sortByDesc('total_score')
+                ->values();
+        }
+
         $votedEmployeeIds = Vote::where('period_id', $period->id)
             ->where('voter_id', $userId)
             ->where('category_id', $category->id)
@@ -141,7 +160,7 @@ class VotingController extends Controller
             ->where('id', '!=', $employeeId)
             ->whereNotIn('id', $votedEmployeeIds);
 
-        if ($category->nama === 'Pegawai Disiplin') {
+        if ($isAutomaticVoting) {
             $employeesQuery->where('jabatan', 'not like', '%Ketua%')
                 ->where('jabatan', 'not like', '%Wakil%')
                 ->where('jabatan', 'not like', '%Panitera%')
@@ -164,6 +183,9 @@ class VotingController extends Controller
             'category' => $category,
             'criteria' => $criteria,
             'employees' => $employees,
+            'isAutomaticVoting' => $isAutomaticVoting,
+            'automaticVotes' => $automaticVotes,
+            'isResultsLocked' => $isResultsLocked,
         ]);
     }
 
@@ -217,5 +239,31 @@ class VotingController extends Controller
         return Inertia::render('Penilai/Voting/History', [
             'votes' => $votes,
         ]);
+    }
+
+    public function generateAutomaticDisciplineVotes(
+        Request $request,
+        Period $period,
+        Category $category,
+        DisciplineVoteService $service
+    ): RedirectResponse {
+        $disciplineCategoryId = 3;
+
+        if ($category->id !== $disciplineCategoryId) {
+            return back()->with('error', 'Kategori ini tidak mendukung voting otomatis.');
+        }
+
+        $overwrite = $request->boolean('overwrite');
+        $result = $service->generateVotes($period->id, auth()->id(), ['overwrite' => $overwrite]);
+
+        if ($result['success'] === 0 && ! empty($result['errors'])) {
+            return back()->with('error', 'Gagal generate voting otomatis. '.$result['errors'][0]);
+        }
+
+        if ($result['failed'] > 0) {
+            return back()->with('error', "Sebagian data gagal diproses ({$result['failed']} pegawai).");
+        }
+
+        return back()->with('success', "Voting otomatis berhasil dibuat untuk {$result['success']} pegawai.");
     }
 }
