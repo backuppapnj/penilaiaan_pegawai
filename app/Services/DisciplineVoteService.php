@@ -412,7 +412,7 @@ class DisciplineVoteService
 
     private function getStartMonthForEmployee(Employee $employee, int $year): int
     {
-        if ($employee->golongan !== 'IX' || ! $employee->tmt) {
+        if (! $employee->tmt) {
             return 1;
         }
 
@@ -421,7 +421,22 @@ class DisciplineVoteService
             return 1;
         }
 
+        if (! $this->isPppk($employee)) {
+            return 1;
+        }
+
         return (int) $employee->tmt->format('n');
+    }
+
+    private function isPppk(Employee $employee): bool
+    {
+        $golongan = trim($employee->golongan);
+
+        if ($golongan === '') {
+            return false;
+        }
+
+        return ! str_contains($golongan, '/');
     }
 
     /**
