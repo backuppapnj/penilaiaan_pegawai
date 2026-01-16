@@ -6,6 +6,7 @@ use App\Http\Requests\StoreVoteRequest;
 use App\Models\Category;
 use App\Models\Employee;
 use App\Models\Period;
+use App\Models\User;
 use App\Models\Vote;
 use App\Models\VoteDetail;
 use App\Services\DisciplineVoteService;
@@ -21,6 +22,8 @@ class VotingController extends Controller
     public function index(): Response
     {
         $activePeriod = Period::where('status', 'open')->first();
+        $user = auth()->user();
+        $canViewDisciplineResults = $this->canViewDisciplineResults($user);
 
         if (! $activePeriod) {
             return Inertia::render('Penilai/Voting/Index', [
@@ -29,6 +32,10 @@ class VotingController extends Controller
                 'employees' => [],
                 'criteria' => [],
                 'votedEmployees' => [],
+                'eligibleEmployeeCounts' => [],
+                'remainingCounts' => [],
+                'disciplineVotesCount' => 0,
+                'canViewDisciplineResults' => $canViewDisciplineResults,
             ]);
         }
 
@@ -147,6 +154,7 @@ class VotingController extends Controller
             'eligibleEmployeeCounts' => $eligibleEmployeeCounts,
             'remainingCounts' => $remainingCounts,
             'disciplineVotesCount' => $disciplineVotesCount,
+            'canViewDisciplineResults' => $canViewDisciplineResults,
         ]);
     }
 
@@ -163,7 +171,8 @@ class VotingController extends Controller
         $isAutomaticVoting = $category->id === $disciplineCategoryId;
         $user = auth()->user();
         $isAdmin = $user?->hasRole('Admin', 'SuperAdmin') ?? false;
-        $isResultsLocked = $isAutomaticVoting && ! $isAdmin && $period->status !== 'announced';
+        $canViewDisciplineResults = $this->canViewDisciplineResults($user);
+        $isResultsLocked = $isAutomaticVoting && ! $canViewDisciplineResults && $period->status !== 'announced';
         $excludedNips = $this->getExcludedPimpinanNips();
 
         // For automatic voting, get all generated votes
@@ -336,5 +345,53 @@ class VotingController extends Controller
         }
 
         return array_values(array_unique($nips));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getDisciplineResultViewerNips(): array
+    {
+        $path = base_path('docs/org_structure.json');
+        if (! File::exists($path)) {
+            return [];
+        }
+
+        $org = json_decode(File::get($path), true);
+        if (! is_array($org)) {
+            return [];
+        }
+
+        $nips = [];
+
+        foreach ($org['pimpinan'] ?? [] as $pimpinan) {
+            if (! empty($pimpinan['nip'])) {
+                $nips[] = $pimpinan['nip'];
+            }
+        }
+
+        if (! empty($org['panitera']['panitera']['nip'])) {
+            $nips[] = $org['panitera']['panitera']['nip'];
+        }
+
+        return array_values(array_unique($nips));
+    }
+
+    private function canViewDisciplineResults(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->hasRole('Admin', 'SuperAdmin')) {
+            return true;
+        }
+
+        $nip = $user->nip ?? $user->employee?->nip;
+        if (! $nip) {
+            return false;
+        }
+
+        return in_array($nip, $this->getDisciplineResultViewerNips(), true);
     }
 }

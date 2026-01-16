@@ -52,6 +52,7 @@ interface PageProps {
     eligibleEmployeeCounts: Record<number, number>;
     remainingCounts: Record<number, number>;
     disciplineVotesCount: number;
+    canViewDisciplineResults: boolean;
 }
 
 export default function VotingIndex({
@@ -61,6 +62,7 @@ export default function VotingIndex({
     eligibleEmployeeCounts,
     remainingCounts,
     disciplineVotesCount,
+    canViewDisciplineResults,
 }: PageProps) {
     const { auth } = usePage<SharedData>().props;
     const userRole = auth.user?.role;
@@ -124,8 +126,12 @@ export default function VotingIndex({
                                 {categories.map((category) => {
                                     const isDisciplineCategory =
                                         category.id === 3;
+                                    const canSeeDisciplineResults =
+                                        isDisciplineCategory &&
+                                        canViewDisciplineResults;
                                     const isLockedForUser =
-                                        isDisciplineCategory && !isAdmin;
+                                        isDisciplineCategory &&
+                                        !canViewDisciplineResults;
                                     const disciplineVotesGenerated =
                                         isDisciplineCategory &&
                                         disciplineVotesCount > 0;
@@ -138,6 +144,14 @@ export default function VotingIndex({
                                         eligibleCount > 0 &&
                                         remainingCount === 0;
                                     const isEmpty = eligibleCount === 0;
+                                    const isDisciplineWaitingGenerate =
+                                        canSeeDisciplineResults &&
+                                        !disciplineVotesGenerated &&
+                                        !isAdmin;
+                                    const isDisabled =
+                                        isEmpty ||
+                                        isLockedForUser ||
+                                        isDisciplineWaitingGenerate;
 
                                     return (
                                         <div
@@ -171,8 +185,7 @@ export default function VotingIndex({
                                                                     diumumkan
                                                                 </span>
                                                             </>
-                                                        ) : isDisciplineCategory &&
-                                                          isAdmin ? (
+                                                        ) : canSeeDisciplineResults ? (
                                                             disciplineVotesGenerated ? (
                                                                 <>
                                                                     <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
@@ -185,8 +198,9 @@ export default function VotingIndex({
                                                                 <>
                                                                     <Clock className="size-4 text-amber-600 dark:text-amber-400" />
                                                                     <span className="text-gray-600 dark:text-gray-400">
-                                                                        Belum
-                                                                        di-generate
+                                                                        {isAdmin
+                                                                            ? 'Belum di-generate'
+                                                                            : 'Menunggu di-generate'}
                                                                     </span>
                                                                 </>
                                                             )
@@ -218,15 +232,12 @@ export default function VotingIndex({
                                             <Link
                                                 href={`/penilai/voting/${activePeriod.id}/${category.id}`}
                                                 className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                                                    isEmpty || isLockedForUser
+                                                    isDisabled
                                                         ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'
                                                         : 'bg-blue-600 text-white hover:bg-blue-700'
                                                 }`}
                                                 onClick={(e) => {
-                                                    if (
-                                                        isEmpty ||
-                                                        isLockedForUser
-                                                    ) {
+                                                    if (isDisabled) {
                                                         e.preventDefault();
                                                     }
                                                 }}
@@ -235,11 +246,12 @@ export default function VotingIndex({
                                                     ? 'Kosong'
                                                     : isLockedForUser
                                                       ? 'Menunggu Pengumuman'
-                                                      : isDisciplineCategory &&
-                                                          isAdmin
+                                                      : canSeeDisciplineResults
                                                         ? disciplineVotesGenerated
                                                             ? 'Lihat Hasil'
-                                                            : 'Generate Otomatis'
+                                                            : isAdmin
+                                                              ? 'Generate Otomatis'
+                                                              : 'Menunggu Generate'
                                                       : isFullyCompleted
                                                         ? 'Lihat Hasil'
                                                       : 'Mulai Menilai'}
