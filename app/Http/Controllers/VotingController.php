@@ -12,6 +12,7 @@ use App\Services\DisciplineVoteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,19 +37,30 @@ class VotingController extends Controller
         $userId = auth()->id();
         $employeeId = auth()->user()?->employee?->id;
 
-        $votedEmployees = Vote::where('period_id', $activePeriod->id)
+        $votedByCategory = Vote::where('period_id', $activePeriod->id)
             ->where('voter_id', $userId)
-            ->pluck('employee_id');
+            ->get()
+            ->groupBy('category_id')
+            ->map(fn ($votes) => $votes->pluck('employee_id'));
+
+        $votedEmployees = $votedByCategory
+            ->flatten()
+            ->unique()
+            ->values();
+
+        $excludedNips = $this->getExcludedPimpinanNips();
 
         // Filter untuk halaman index: hanya Pimpinan yang dikecualikan
         $employees = Employee::with('category')
             ->where('id', '!=', $employeeId)
             ->whereNotNull('category_id')
             ->whereNotIn('id', $votedEmployees)
-            ->where('jabatan', 'not like', '%Ketua%')
-            ->where('jabatan', 'not like', '%Wakil%')
-            ->where('jabatan', 'not like', '%Panitera%')
-            ->where('jabatan', 'not like', '%Sekretaris%')
+            ->whereHas('user', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->when(! empty($excludedNips), function ($query) use ($excludedNips) {
+                $query->whereNotIn('nip', $excludedNips);
+            })
             ->get();
 
         // Hitung eligible employees per kategori
@@ -61,10 +73,12 @@ class VotingController extends Controller
             ->where('id', '!=', $employeeId)
             ->whereNotNull('category_id')
             ->whereIn('category_id', [1, 2])
-            ->where('jabatan', 'not like', '%Ketua%')
-            ->where('jabatan', 'not like', '%Wakil%')
-            ->where('jabatan', 'not like', '%Panitera%')
-            ->where('jabatan', 'not like', '%Sekretaris%')
+            ->whereHas('user', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->when(! empty($excludedNips), function ($query) use ($excludedNips) {
+                $query->whereNotIn('nip', $excludedNips);
+            })
             ->groupBy('category_id')
             ->pluck('total', 'category_id');
 
@@ -75,10 +89,12 @@ class VotingController extends Controller
         // Kategori 3 (Pegawai Disiplin): hitung semua pegawai kecuali pimpinan
         $disiplinCount = Employee::where('id', '!=', $employeeId)
             ->whereNotNull('category_id')
-            ->where('jabatan', 'not like', '%Ketua%')
-            ->where('jabatan', 'not like', '%Wakil%')
-            ->where('jabatan', 'not like', '%Panitera%')
-            ->where('jabatan', 'not like', '%Sekretaris%')
+            ->whereHas('user', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->when(! empty($excludedNips), function ($query) use ($excludedNips) {
+                $query->whereNotIn('nip', $excludedNips);
+            })
             ->count();
 
         $eligibleEmployeeCounts[3] = $disiplinCount;
@@ -88,13 +104,16 @@ class VotingController extends Controller
 
         // Kategori 1 & 2: hitung berdasarkan category_id
         foreach ([1, 2] as $catId) {
+            $votedForCategory = $votedByCategory->get($catId, collect());
             $count = Employee::where('id', '!=', $employeeId)
                 ->where('category_id', $catId)
-                ->whereNotIn('id', $votedEmployees)
-                ->where('jabatan', 'not like', '%Ketua%')
-                ->where('jabatan', 'not like', '%Wakil%')
-                ->where('jabatan', 'not like', '%Panitera%')
-                ->where('jabatan', 'not like', '%Sekretaris%')
+                ->whereNotIn('id', $votedForCategory)
+                ->whereHas('user', function ($query) {
+                    $query->where('is_active', true);
+                })
+                ->when(! empty($excludedNips), function ($query) use ($excludedNips) {
+                    $query->whereNotIn('nip', $excludedNips);
+                })
                 ->count();
             $remainingCounts[$catId] = $count;
         }
@@ -109,10 +128,12 @@ class VotingController extends Controller
         $remainingCounts[3] = Employee::where('id', '!=', $employeeId)
             ->whereNotNull('category_id')
             ->whereNotIn('id', $votedForCategory3)
-            ->where('jabatan', 'not like', '%Ketua%')
-            ->where('jabatan', 'not like', '%Wakil%')
-            ->where('jabatan', 'not like', '%Panitera%')
-            ->where('jabatan', 'not like', '%Sekretaris%')
+            ->whereHas('user', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->when(! empty($excludedNips), function ($query) use ($excludedNips) {
+                $query->whereNotIn('nip', $excludedNips);
+            })
             ->count();
 
         return Inertia::render('Penilai/Voting/Index', [
@@ -139,22 +160,25 @@ class VotingController extends Controller
         $user = auth()->user();
         $isAdmin = $user?->hasRole('Admin', 'SuperAdmin') ?? false;
         $isResultsLocked = $isAutomaticVoting && ! $isAdmin && $period->status !== 'announced';
+        $excludedNips = $this->getExcludedPimpinanNips();
 
         // For automatic voting, get all generated votes
         $automaticVotes = null;
         if ($isAutomaticVoting && ! $isResultsLocked) {
             $automaticVotes = Vote::where('period_id', $period->id)
                 ->where('category_id', $category->id)
-                ->whereHas('employee', function ($query) {
-                    $query->where('jabatan', 'not like', '%Ketua%')
-                        ->where('jabatan', 'not like', '%Wakil%')
-                        ->where('jabatan', 'not like', '%Panitera%')
-                        ->where('jabatan', 'not like', '%Sekretaris%');
+                ->whereHas('employee', function ($query) use ($excludedNips) {
+                    $query->whereHas('user', function ($query) {
+                        $query->where('is_active', true);
+                    });
+                    if (! empty($excludedNips)) {
+                        $query->whereNotIn('nip', $excludedNips);
+                    }
                 })
                 ->with(['employee', 'voteDetails.criterion', 'voter'])
-                ->get()
-                ->sortByDesc('total_score')
-                ->values();
+                ->orderByDesc('total_score')
+                ->orderByDesc('early_arrival_count')
+                ->get();
         }
 
         $votedEmployeeIds = Vote::where('period_id', $period->id)
@@ -164,22 +188,20 @@ class VotingController extends Controller
 
         $employeesQuery = Employee::with('category')
             ->where('id', '!=', $employeeId)
-            ->whereNotIn('id', $votedEmployeeIds);
+            ->whereNotIn('id', $votedEmployeeIds)
+            ->whereHas('user', function ($query) {
+                $query->where('is_active', true);
+            });
 
         if ($isAutomaticVoting) {
-            $employeesQuery->where('jabatan', 'not like', '%Ketua%')
-                ->where('jabatan', 'not like', '%Wakil%')
-                ->where('jabatan', 'not like', '%Panitera%')
-                ->where('jabatan', 'not like', '%Sekretaris%');
+            if (! empty($excludedNips)) {
+                $employeesQuery->whereNotIn('nip', $excludedNips);
+            }
         } else {
             $employeesQuery->where('category_id', $category->id)
-                ->whereNotIn('jabatan', [
-                    'Ketua Pengadilan Tingkat Pertama Klas II',
-                    'Wakil Ketua Tingkat Pertama',
-                    'Hakim Tingkat Pertama',
-                    'Panitera Tingkat Pertama Klas II',
-                    'Sekretaris Tingkat Pertama Klas II',
-                ]);
+                ->when(! empty($excludedNips), function ($query) use ($excludedNips) {
+                    $query->whereNotIn('nip', $excludedNips);
+                });
         }
 
         $employees = $employeesQuery->get();
@@ -271,5 +293,39 @@ class VotingController extends Controller
         }
 
         return back()->with('success', "Voting otomatis berhasil dibuat untuk {$result['success']} pegawai.");
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getExcludedPimpinanNips(): array
+    {
+        $path = base_path('docs/org_structure.json');
+        if (! File::exists($path)) {
+            return [];
+        }
+
+        $org = json_decode(File::get($path), true);
+        if (! is_array($org)) {
+            return [];
+        }
+
+        $nips = [];
+
+        foreach ($org['pimpinan'] ?? [] as $pimpinan) {
+            if (! empty($pimpinan['nip'])) {
+                $nips[] = $pimpinan['nip'];
+            }
+        }
+
+        if (! empty($org['panitera']['panitera']['nip'])) {
+            $nips[] = $org['panitera']['panitera']['nip'];
+        }
+
+        if (! empty($org['sekretariat']['sekretaris']['nip'])) {
+            $nips[] = $org['sekretariat']['sekretaris']['nip'];
+        }
+
+        return array_values(array_unique($nips));
     }
 }

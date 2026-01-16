@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 
@@ -54,7 +55,7 @@ class EmployeeSeeder extends Seeder
                 $categoryId = $kategori2?->id;
             }
 
-            Employee::updateOrCreate(
+            $employee = Employee::updateOrCreate(
                 ['nip' => $data['nip']],
                 [
                     'nama' => $data['nama'],
@@ -66,6 +67,10 @@ class EmployeeSeeder extends Seeder
                     'category_id' => $categoryId,
                 ]
             );
+
+            User::where('nip', $data['nip'])->update([
+                'employee_id' => $employee->id,
+            ]);
         }
 
         $this->command->info('Employees seeded successfully from JSON.');

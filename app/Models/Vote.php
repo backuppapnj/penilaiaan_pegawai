@@ -18,6 +18,7 @@ class Vote extends Model
         'category_id',
         'scores',
         'total_score',
+        'early_arrival_count',
     ];
 
     protected function casts(): array
@@ -26,6 +27,7 @@ class Vote extends Model
             'scores' => 'array',
             'total_score' => 'decimal:2',
             'voted_at' => 'datetime',
+            'early_arrival_count' => 'integer',
         ];
     }
 

@@ -55,6 +55,8 @@ interface Period {
     year: number;
     start_date: string;
     end_date: string;
+    start_date_formatted?: string;
+    end_date_formatted?: string;
     status: 'draft' | 'open' | 'closed' | 'announced';
     notes: string | null;
     votes: Vote[];
@@ -181,7 +183,8 @@ export default function ShowPeriod({ period }: PageProps) {
                                         Tanggal Mulai
                                     </dt>
                                     <dd className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
-                                        {period.start_date}
+                                        {period.start_date_formatted ??
+                                            period.start_date}
                                     </dd>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
@@ -189,7 +192,8 @@ export default function ShowPeriod({ period }: PageProps) {
                                         Tanggal Selesai
                                     </dt>
                                     <dd className="col-span-2 text-sm text-gray-900 dark:text-gray-100">
-                                        {period.end_date}
+                                        {period.end_date_formatted ??
+                                            period.end_date}
                                     </dd>
                                 </div>
                                 {period.notes && (

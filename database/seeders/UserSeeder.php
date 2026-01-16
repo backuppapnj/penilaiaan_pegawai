@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
@@ -45,6 +46,11 @@ class UserSeeder extends Seeder
             '197503141996031002' => 'Penilai', // Muhammad Hamdi - Panitera
         ];
 
+        $inactiveNips = [
+            '198009202002121004',
+            '198604122017122001',
+        ];
+
         $count = 0;
         foreach ($employees as $data) {
             $nip = $data['nip'];
@@ -56,16 +62,22 @@ class UserSeeder extends Seeder
             // Generate email dari nama
             $email = $this->generateEmail($nama);
 
-            User::updateOrCreate(
+            $user = User::updateOrCreate(
                 ['nip' => $nip],
                 [
                     'name' => $nama,
                     'email' => $email,
                     'password' => bcrypt($nip), // Password default = NIP
                     'role' => $role,
-                    'is_active' => true,
+                    'is_active' => ! in_array($nip, $inactiveNips, true),
                 ]
             );
+
+            $employee = Employee::where('nip', $nip)->first();
+            if ($employee) {
+                $user->employee_id = $employee->id;
+                $user->save();
+            }
 
             $count++;
         }

@@ -27,6 +27,8 @@ interface Period {
     year: number;
     start_date: string;
     end_date: string;
+    start_date_formatted?: string;
+    end_date_formatted?: string;
     status: 'draft' | 'open' | 'closed' | 'announced';
     votes_count: number;
 }
@@ -160,8 +162,11 @@ export default function PeriodIndex({ periods }: PageProps) {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {period.start_date} -{' '}
-                                                    {period.end_date}
+                                                    {period.start_date_formatted ??
+                                                        period.start_date}{' '}
+                                                    -{' '}
+                                                    {period.end_date_formatted ??
+                                                        period.end_date}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">

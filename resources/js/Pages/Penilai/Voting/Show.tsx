@@ -50,6 +50,7 @@ interface AutomaticVote {
     id: number;
     employee_id: number;
     total_score: number | string | null;
+    early_arrival_count?: number | null;
     employee: Employee;
     voteDetails?: VoteDetail[];
     vote_details?: VoteDetail[];
@@ -91,7 +92,7 @@ export default function VotingShow({
     const [selectedEmployee, setSelectedEmployee] = useState<number | null>(
         null,
     );
-    const [scores, setScores] = useState<Record<number, number>>({});
+    const [scores, setScores] = useState<Record<number, number | ''>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
     const [recentlySuccessful, setRecentlySuccessful] = useState(false);
@@ -108,7 +109,7 @@ export default function VotingShow({
         }
 
         const missingScores = criteria.filter(
-            (criterion) => !scores[criterion.id],
+            (criterion) => typeof scores[criterion.id] !== 'number',
         );
         if (missingScores.length > 0) {
             setErrors({
@@ -117,10 +118,13 @@ export default function VotingShow({
             return;
         }
 
-        const scoresData = criteria.map((criterion) => ({
-            criterion_id: criterion.id,
-            score: scores[criterion.id] || 0,
-        }));
+        const scoresData = criteria.map((criterion) => {
+            const scoreValue = scores[criterion.id];
+            return {
+                criterion_id: criterion.id,
+                score: typeof scoreValue === 'number' ? scoreValue : 0,
+            };
+        });
 
         setProcessing(true);
         router.post(
@@ -150,10 +154,22 @@ export default function VotingShow({
     };
 
     const handleScoreChange = (criterionId: number, value: string) => {
-        const score = parseInt(value) || 0;
+        if (value.trim() === '') {
+            setScores((prev) => ({
+                ...prev,
+                [criterionId]: '',
+            }));
+            return;
+        }
+
+        const score = Number.parseInt(value, 10);
+        if (Number.isNaN(score)) {
+            return;
+        }
+
         setScores((prev) => ({
             ...prev,
-            [criterionId]: Math.min(100, Math.max(1, score)),
+            [criterionId]: Math.min(99, Math.max(1, score)),
         }));
         if (errors.scores) {
             setErrors((prev) => {
@@ -165,11 +181,13 @@ export default function VotingShow({
     };
 
     const totalScore = Object.values(scores).reduce(
-        (sum, score) => sum + score,
+        (sum, score) => sum + (typeof score === 'number' ? score : 0),
         0,
     );
     const averageScore = criteria.length > 0 ? totalScore / criteria.length : 0;
-    const allCriteriaRated = criteria.every((criterion) => scores[criterion.id]);
+    const allCriteriaRated = criteria.every(
+        (criterion) => typeof scores[criterion.id] === 'number',
+    );
     const isDisciplineCategory = category.id === 3;
 
     const normalizeScore = (value: unknown): number => {
@@ -306,6 +324,9 @@ export default function VotingShow({
                                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                                 NIP
                                             </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                                Datang Awal
+                                            </th>
                                             {criteria.map((criterion) => (
                                                 <th key={criterion.id} className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                                     {criterion.nama}
@@ -358,6 +379,9 @@ export default function VotingShow({
                                                 </td>
                                                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                                                     {vote.employee.nip}
+                                                </td>
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                                    {vote.early_arrival_count ?? 0}
                                                 </td>
                                                 {criteria.map((criterion) => {
                                                     const voteDetails =
@@ -562,7 +586,7 @@ export default function VotingShow({
                                                         id={`score-${criterion.id}`}
                                                         type="number"
                                                         min="1"
-                                                        max="100"
+                                                        max="99"
                                                         value={
                                                             scores[
                                                                 criterion.id
@@ -574,8 +598,11 @@ export default function VotingShow({
                                                                 e.target.value,
                                                             )
                                                         }
+                                                        onFocus={(e) =>
+                                                            e.currentTarget.select()
+                                                        }
                                                         className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                                        placeholder="Masukkan nilai (1-100)"
+                                                        placeholder="Masukkan nilai (1-99)"
                                                         aria-label={`Nilai untuk ${criterion.nama}`}
                                                         aria-describedby={`score-help-${criterion.id}`}
                                                         disabled={processing}
@@ -584,11 +611,16 @@ export default function VotingShow({
                                                         <input
                                                             type="range"
                                                             min="1"
-                                                            max="100"
+                                                            max="99"
                                                             value={
-                                                                scores[
+                                                                typeof scores[
                                                                     criterion.id
-                                                                ] || 50
+                                                                ] === 'number'
+                                                                    ? scores[
+                                                                          criterion
+                                                                              .id
+                                                                      ]
+                                                                    : 50
                                                             }
                                                             onChange={(e) =>
                                                                 handleScoreChange(
@@ -614,7 +646,7 @@ export default function VotingShow({
                                                     id={`score-help-${criterion.id}`}
                                                     className="mt-2 text-sm text-gray-600 dark:text-gray-400"
                                                 >
-                                                    Berikan nilai antara 1-100
+                                                    Berikan nilai antara 1-99
                                                     untuk kriteria ini
                                                 </p>
                                             </div>
@@ -657,9 +689,11 @@ export default function VotingShow({
                                             </p>
                                             <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                                 {
-                                                    Object.values(
-                                                        scores,
-                                                    ).filter(Boolean).length
+                                                    Object.values(scores).filter(
+                                                        (score) =>
+                                                            typeof score ===
+                                                            'number',
+                                                    ).length
                                                 }
                                                 /{criteria.length}
                                             </p>
