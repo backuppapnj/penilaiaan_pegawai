@@ -33,6 +33,9 @@ class VotingController extends Controller
         }
 
         $categories = Category::with('criteria')->orderBy('urutan')->get();
+        $disciplineVotesCount = Vote::where('period_id', $activePeriod->id)
+            ->where('category_id', 3)
+            ->count();
 
         $userId = auth()->id();
         $employeeId = auth()->user()?->employee?->id;
@@ -143,6 +146,7 @@ class VotingController extends Controller
             'votedEmployees' => $votedEmployees,
             'eligibleEmployeeCounts' => $eligibleEmployeeCounts,
             'remainingCounts' => $remainingCounts,
+            'disciplineVotesCount' => $disciplineVotesCount,
         ]);
     }
 
@@ -282,6 +286,11 @@ class VotingController extends Controller
         }
 
         $overwrite = $request->boolean('overwrite');
+
+        if (! $overwrite && $service->hasDisciplineVotes($period->id)) {
+            return back()->with('success', 'Voting otomatis sudah di-generate.');
+        }
+
         $result = $service->generateVotes($period->id, auth()->id(), ['overwrite' => $overwrite]);
 
         if ($result['success'] === 0 && ! empty($result['errors'])) {

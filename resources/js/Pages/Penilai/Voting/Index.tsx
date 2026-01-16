@@ -51,6 +51,7 @@ interface PageProps {
     votedEmployees: number[];
     eligibleEmployeeCounts: Record<number, number>;
     remainingCounts: Record<number, number>;
+    disciplineVotesCount: number;
 }
 
 export default function VotingIndex({
@@ -59,6 +60,7 @@ export default function VotingIndex({
     employees,
     eligibleEmployeeCounts,
     remainingCounts,
+    disciplineVotesCount,
 }: PageProps) {
     const { auth } = usePage<SharedData>().props;
     const userRole = auth.user?.role;
@@ -124,6 +126,9 @@ export default function VotingIndex({
                                         category.id === 3;
                                     const isLockedForUser =
                                         isDisciplineCategory && !isAdmin;
+                                    const disciplineVotesGenerated =
+                                        isDisciplineCategory &&
+                                        disciplineVotesCount > 0;
                                     const remainingCount =
                                         remainingCounts[category.id] || 0;
                                     const eligibleCount =
@@ -166,6 +171,25 @@ export default function VotingIndex({
                                                                     diumumkan
                                                                 </span>
                                                             </>
+                                                        ) : isDisciplineCategory &&
+                                                          isAdmin ? (
+                                                            disciplineVotesGenerated ? (
+                                                                <>
+                                                                    <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
+                                                                    <span className="text-green-600 dark:text-green-400">
+                                                                        Sudah
+                                                                        di-generate
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Clock className="size-4 text-amber-600 dark:text-amber-400" />
+                                                                    <span className="text-gray-600 dark:text-gray-400">
+                                                                        Belum
+                                                                        di-generate
+                                                                    </span>
+                                                                </>
+                                                            )
                                                         ) : isFullyCompleted ? (
                                                             <>
                                                                 <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
@@ -211,10 +235,13 @@ export default function VotingIndex({
                                                     ? 'Kosong'
                                                     : isLockedForUser
                                                       ? 'Menunggu Pengumuman'
-                                                    : isFullyCompleted
-                                                      ? 'Lihat Hasil'
-                                                      : isDisciplineCategory
-                                                        ? 'Mulai Menilai Otomatis'
+                                                      : isDisciplineCategory &&
+                                                          isAdmin
+                                                        ? disciplineVotesGenerated
+                                                            ? 'Lihat Hasil'
+                                                            : 'Generate Otomatis'
+                                                      : isFullyCompleted
+                                                        ? 'Lihat Hasil'
                                                       : 'Mulai Menilai'}
                                             </Link>
                                         </div>

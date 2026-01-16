@@ -213,6 +213,9 @@ export default function VotingShow({
         (criterion) => typeof scores[criterion.id] === 'number',
     );
     const isDisciplineCategory = category.id === 3;
+    const hasAutomaticVotes = Boolean(
+        isAutomaticVoting && automaticVotes && automaticVotes.length > 0,
+    );
 
     const normalizeScore = (value: unknown): number => {
         if (typeof value === 'number') {
@@ -231,6 +234,16 @@ export default function VotingShow({
     };
 
     const handleGenerateAutomaticVotes = (overwrite = false) => {
+        if (
+            overwrite &&
+            typeof window !== 'undefined' &&
+            !window.confirm(
+                'Generate ulang akan menimpa hasil voting otomatis yang sudah ada. Lanjutkan?',
+            )
+        ) {
+            return;
+        }
+
         setIsGenerating(true);
         router.post(
             `/penilai/voting/${period.id}/${category.id}/generate`,
@@ -284,13 +297,23 @@ export default function VotingShow({
                                 <Award className="size-6 text-blue-600 dark:text-blue-400 mt-1" />
                                 <div className="flex-1">
                                     <div className="flex flex-wrap items-start justify-between gap-3">
-                                        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-                                            Voting Otomatis Pegawai Disiplin
-                                        </h2>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                                                Voting Otomatis Pegawai Disiplin
+                                            </h2>
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                <CheckCircle2 className="size-3" />
+                                                Sudah di-generate
+                                            </span>
+                                        </div>
                                         {isAdmin && isDisciplineCategory && (
                                             <button
                                                 type="button"
-                                                onClick={() => handleGenerateAutomaticVotes(true)}
+                                                onClick={() =>
+                                                    handleGenerateAutomaticVotes(
+                                                        true,
+                                                    )
+                                                }
                                                 disabled={isGenerating}
                                                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
@@ -470,11 +493,16 @@ export default function VotingShow({
                                           : ' Silakan tunggu administrator untuk generate data.'
                                   }`}
                         </p>
-                        {isAdmin && isDisciplineCategory && !isResultsLocked && (
+                        {isAdmin &&
+                            isDisciplineCategory &&
+                            !isResultsLocked &&
+                            !hasAutomaticVotes && (
                             <div className="mt-6 flex justify-center">
                                 <button
                                     type="button"
-                                    onClick={() => handleGenerateAutomaticVotes(true)}
+                                    onClick={() =>
+                                        handleGenerateAutomaticVotes(false)
+                                    }
                                     disabled={isGenerating}
                                     className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
@@ -484,7 +512,7 @@ export default function VotingShow({
                                             Menghasilkan...
                                         </>
                                     ) : (
-                                        'Generate Ulang (Overwrite)'
+                                        'Generate Otomatis'
                                     )}
                                 </button>
                             </div>
