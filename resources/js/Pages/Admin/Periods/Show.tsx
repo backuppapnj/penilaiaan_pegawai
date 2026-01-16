@@ -65,9 +65,29 @@ interface Period {
 
 interface PageProps {
     period: Period;
+    pendingVotersByCategory?: PendingCategory[];
 }
 
-export default function ShowPeriod({ period }: PageProps) {
+interface PendingVoter {
+    id: number;
+    nama: string;
+    nip?: string | null;
+    completed: number;
+    total: number;
+    missing: number;
+}
+
+interface PendingCategory {
+    id: number;
+    nama: string;
+    pending_count: number;
+    pending: PendingVoter[];
+}
+
+export default function ShowPeriod({
+    period,
+    pendingVotersByCategory = [],
+}: PageProps) {
     const [updatingStatus, setUpdatingStatus] = useState(false);
     const [statusDialogOpen, setStatusDialogOpen] = useState(false);
     const [pendingStatus, setPendingStatus] = useState<string | null>(null);
@@ -344,6 +364,83 @@ export default function ShowPeriod({ period }: PageProps) {
                                     </dd>
                                 </div>
                             </dl>
+                        </div>
+
+                        <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 dark:bg-gray-900">
+                            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                Pegawai Belum Menilai
+                            </h2>
+                            <div className="space-y-4">
+                                {pendingVotersByCategory.length === 0 ? (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Tidak ada data pegawai.
+                                    </p>
+                                ) : (
+                                    pendingVotersByCategory.map((category) => (
+                                        <div
+                                            key={category.id}
+                                            className="rounded-lg border border-gray-200 p-4 dark:border-gray-800"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                    {category.nama}
+                                                </p>
+                                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                                    {category.pending_count}{' '}
+                                                    belum selesai
+                                                </span>
+                                            </div>
+                                            {category.pending.length === 0 ? (
+                                                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                                    Semua pegawai sudah
+                                                    menyelesaikan penilaian.
+                                                </p>
+                                            ) : (
+                                                <div className="mt-3 divide-y divide-gray-200 dark:divide-gray-800">
+                                                    {category.pending.map(
+                                                        (penilai) => (
+                                                            <div
+                                                                key={penilai.id}
+                                                                className="flex items-center justify-between py-2"
+                                                            >
+                                                                <div>
+                                                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                                        {
+                                                                            penilai.nama
+                                                                        }
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                                        NIP:{' '}
+                                                                        {penilai.nip ??
+                                                                            '-'}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="text-right text-xs text-gray-600 dark:text-gray-400">
+                                                                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                                        {
+                                                                            penilai.completed
+                                                                        }
+                                                                        /
+                                                                        {
+                                                                            penilai.total
+                                                                        }
+                                                                    </div>
+                                                                    <div>
+                                                                        Kurang{' '}
+                                                                        {
+                                                                            penilai.missing
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
 
                         <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 dark:bg-gray-900">
