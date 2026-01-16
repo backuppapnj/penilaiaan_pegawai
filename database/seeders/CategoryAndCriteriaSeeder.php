@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Criterion;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class CategoryAndCriteriaSeeder extends Seeder
@@ -58,10 +57,10 @@ class CategoryAndCriteriaSeeder extends Seeder
             Criterion::create(array_merge($criterion, ['category_id' => $kategori2->id]));
         }
 
-        // Category 3: Pegawai Disiplin (25 orang, excluding pimpinan & hakim)
+        // Category 3: Pegawai Disiplin (25 orang, excluding pimpinan)
         $kategori3 = Category::create([
             'nama' => 'Pegawai Disiplin',
-            'deskripsi' => 'Kategori penilaian berdasarkan data absensi SIKEP. Termasuk semua pegawai KECUALI Pimpinan (Ketua, Wakil, Panitera, Sekretaris) dan Yudisial (Hakim)',
+            'deskripsi' => 'Kategori penilaian berdasarkan data absensi SIKEP. Termasuk semua pegawai KECUALI Pimpinan (Ketua, Wakil, Panitera, Sekretaris)',
             'urutan' => 3,
         ]);
 
