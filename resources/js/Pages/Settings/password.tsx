@@ -1,11 +1,14 @@
 import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
+import AlertError from '@/components/alert-error';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SettingsLayout from '@/layouts/settings/layout';
 import { Head, useForm } from '@inertiajs/react';
+import { CheckCircle2 } from 'lucide-react';
 import { type FormEvent, useRef } from 'react';
 
 export default function Password() {
@@ -18,6 +21,8 @@ export default function Password() {
             password: '',
             password_confirmation: '',
         });
+
+    const errorMessages = Object.values(errors);
 
     const submit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -56,6 +61,23 @@ export default function Password() {
                     onSubmit={submit}
                     className="space-y-6"
                 >
+                    {errorMessages.length > 0 && (
+                        <AlertError
+                            title="Gagal memperbarui password"
+                            errors={errorMessages}
+                        />
+                    )}
+
+                    {recentlySuccessful && (
+                        <Alert className="border-green-200 bg-green-50 text-green-800 dark:border-green-900/50 dark:bg-green-900/30 dark:text-green-100">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <AlertTitle>Password diperbarui</AlertTitle>
+                            <AlertDescription>
+                                Password Anda berhasil disimpan.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
                     <div className="grid gap-2">
                         <Label htmlFor="current_password">Current Password</Label>
 
