@@ -130,7 +130,7 @@ class ImportEmployees extends Command
             $this->assignCategory3($orgStructure);
 
             // Display summary
-            $this->info("Import completed successfully!");
+            $this->info('Import completed successfully!');
             $this->table(
                 ['Metric', 'Count'],
                 [
@@ -146,15 +146,15 @@ class ImportEmployees extends Command
             $kategori1Count = Employee::where('category_id', $kategori1->id)->count();
             $kategori2Count = Employee::where('category_id', $kategori2->id)->count();
 
-            // Kategori 3 is dynamic: all employees except pimpinan (4) and hakim (2)
-            $kategori3Count = 29 - 6; // Total minus excluded
+            // Kategori 3 is dynamic: all employees except pimpinan (4)
+            $kategori3Count = 29 - 4; // Total minus excluded
 
             $this->table(
                 ['Category', 'Count', 'Expected', 'Notes'],
                 [
                     ['Pejabat Struktural/Fungsional', $kategori1Count, '14', 'Voting Category'],
                     ['Non-Pejabat', $kategori2Count, '15', 'Voting Category'],
-                    ['Pegawai Disiplin', $kategori3Count, '23', 'SIKEP Category (excludes 6: 4 pimpinan + 2 hakim)'],
+                    ['Pegawai Disiplin', $kategori3Count, '25', 'SIKEP Category (excludes 4 pimpinan)'],
                 ]
             );
 
@@ -294,9 +294,8 @@ class ImportEmployees extends Command
      * Assign Category 3 (Pegawai Disiplin) based on exclusion rules.
      * Category 3 includes all employees EXCEPT:
      * - Pimpinan (Ketua, Wakil, Panitera, Sekretaris)
-     * - Yudisial (Hakim)
      *
-     * Expected: 25 employees (29 total - 4 pimpinan - 2 hakim - 2 panitera muda + kasubag who are already in Kategori 1)
+     * Expected: 25 employees (29 total - 4 pimpinan - 2 panitera muda + kasubag who are already in Kategori 1)
      *
      * Note: This doesn't overwrite existing category assignments. It's for display purposes only.
      */
@@ -308,9 +307,8 @@ class ImportEmployees extends Command
 
         // Excluded NIPs from Kategori 3:
         // - Pimpinan (4): Ketua, Wakil, Panitera, Sekretaris
-        // - Yudisial (2): 2 Hakim
-        // Total excluded: 6
-        // Expected Kategori 3: 29 - 6 = 23 employees (excluding Panitera Muda and Kasubag who are in Kategori 1)
+        // Total excluded: 4
+        // Expected Kategori 3: 29 - 4 = 25 employees (excluding Panitera Muda and Kasubag who are in Kategori 1)
 
         // Since we're using single category assignment, we won't actually assign Kategori 3 here
         // Instead, the system can query for "eligible for Category 3" dynamically by excluding the 6 NIPs

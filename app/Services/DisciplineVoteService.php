@@ -36,9 +36,25 @@ class DisciplineVoteService
         $failed = 0;
         $errors = [];
 
+        if (($options['overwrite'] ?? false) === true) {
+            Vote::where('period_id', $periodId)
+                ->where('category_id', $this->disciplineCategoryId)
+                ->delete();
+        }
+
+        $excludedTitles = ['%Ketua%', '%Wakil%', '%Panitera%', '%Sekretaris%'];
+
         // Get all discipline scores for this period (or without period)
-        $allDisciplineScores = DisciplineScore::where('period_id', $periodId)
-            ->orWhereNull('period_id')
+        $allDisciplineScores = DisciplineScore::where(function ($query) use ($periodId) {
+            $query->where('period_id', $periodId)
+                ->orWhereNull('period_id');
+        })
+            ->whereHas('employee', function ($query) use ($excludedTitles) {
+                foreach ($excludedTitles as $title) {
+                    $query->where('jabatan', 'not like', $title);
+                }
+            })
+            ->with('employee')
             ->get();
 
         if ($allDisciplineScores->isEmpty()) {

@@ -233,7 +233,15 @@ class SikepImportService
 
         $normalized = str_replace(',', '.', trim((string) $value));
 
-        return is_numeric($normalized) ? (float) $normalized : 0.0;
+        if (is_numeric($normalized)) {
+            return (float) $normalized;
+        }
+
+        if (preg_match('/-?\d+(?:\.\d+)?/', $normalized, $matches)) {
+            return (float) $matches[0];
+        }
+
+        return 0.0;
     }
 
     /**

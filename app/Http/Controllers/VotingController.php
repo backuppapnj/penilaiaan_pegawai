@@ -145,6 +145,12 @@ class VotingController extends Controller
         if ($isAutomaticVoting && ! $isResultsLocked) {
             $automaticVotes = Vote::where('period_id', $period->id)
                 ->where('category_id', $category->id)
+                ->whereHas('employee', function ($query) {
+                    $query->where('jabatan', 'not like', '%Ketua%')
+                        ->where('jabatan', 'not like', '%Wakil%')
+                        ->where('jabatan', 'not like', '%Panitera%')
+                        ->where('jabatan', 'not like', '%Sekretaris%');
+                })
                 ->with(['employee', 'voteDetails.criterion', 'voter'])
                 ->get()
                 ->sortByDesc('total_score')
