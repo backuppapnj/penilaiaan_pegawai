@@ -31,6 +31,7 @@ class CertificateController extends Controller
             ->map(fn ($cert) => [
                 'id' => $cert->id,
                 'certificate_id' => $cert->certificate_id,
+                'type' => $cert->type, // Add type here
                 'period' => [
                     'id' => $cert->period->id,
                     'name' => $cert->period->name,
@@ -61,6 +62,7 @@ class CertificateController extends Controller
             ->through(fn ($cert) => [
                 'id' => $cert->id,
                 'certificate_id' => $cert->certificate_id,
+                'type' => $cert->type, // Tambahkan ini
                 'employee' => [
                     'id' => $cert->employee->id,
                     'nama' => $cert->employee->nama,
@@ -123,6 +125,7 @@ class CertificateController extends Controller
                     'period_id' => $data['period_id'],
                     'category_id' => $data['category_id'],
                     'employee_id' => $data['employee_id'],
+                    'type' => $data['type'] ?? 'best_employee', // Tambahkan type sebagai kunci unik
                 ],
                 $data
             );

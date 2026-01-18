@@ -35,6 +35,7 @@ class CertificateService
 
         return [
             'certificate_id' => $certificateId,
+            'type' => 'best_employee',
             'employee_id' => $winner->id,
             'period_id' => $period->id,
             'category_id' => $category->id,
@@ -71,11 +72,85 @@ class CertificateService
     }
 
     /**
+     * Generate certificates for all categories in a period.
+     */
+    public function generateForPeriod(Period $period): array
+    {
+        $categories = Category::all();
+        $results = [];
+
+        foreach ($categories as $category) {
+            // 1. Generate Best Employee Certificate (Voting)
+            $bestEmployeeCert = $this->generateForWinner($period, $category);
+            if ($bestEmployeeCert) {
+                $results[] = $bestEmployeeCert;
+            }
+
+            // 2. Generate Discipline Certificate (Discipline Score)
+            $disciplineCert = $this->generateForDisciplineWinner($period, $category);
+            if ($disciplineCert) {
+                $results[] = $disciplineCert;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Generate certificate for a discipline winner in a specific period and category.
+     */
+    public function generateForDisciplineWinner(Period $period, Category $category, int $rank = 1): ?array
+    {
+        $winner = $this->getDisciplineWinner($period, $category);
+
+        if (! $winner) {
+            return null;
+        }
+
+        $certificateId = $this->generateCertificateId($period, $category, $winner, 'DIS');
+        
+        // Ambil skor disiplin
+        $totalScore = (float) \App\Models\DisciplineScore::query()
+            ->where('period_id', $period->id)
+            ->where('employee_id', $winner->id)
+            ->value('final_score') ?? 0;
+
+        $qrCodePath = $this->generateQrCode($certificateId);
+        $pdfPath = $this->generatePdf($winner, $period, $category, $certificateId, $qrCodePath, $totalScore, 'discipline');
+
+        return [
+            'certificate_id' => $certificateId,
+            'type' => 'discipline',
+            'employee_id' => $winner->id,
+            'period_id' => $period->id,
+            'category_id' => $category->id,
+            'rank' => $rank,
+            'score' => $totalScore,
+            'qr_code_path' => $qrCodePath,
+            'pdf_path' => $pdfPath,
+            'issued_at' => now(),
+        ];
+    }
+
+    /**
+     * Get the discipline winner employee for a specific period and category.
+     */
+    protected function getDisciplineWinner(Period $period, Category $category): ?Employee
+    {
+        return Employee::where('category_id', $category->id)
+            ->join('discipline_scores', 'employees.id', '=', 'discipline_scores.employee_id')
+            ->where('discipline_scores.period_id', $period->id)
+            ->orderByDesc('discipline_scores.final_score')
+            ->select('employees.*')
+            ->first();
+    }
+
+    /**
      * Generate a unique certificate ID.
      */
-    protected function generateCertificateId(Period $period, Category $category, Employee $employee): string
+    protected function generateCertificateId(Period $period, Category $category, Employee $employee, string $prefix = 'CERT'): string
     {
-        return 'CERT-'.$period->id.'-'.$category->id.'-'.$employee->id.'-'.strtoupper(Str::random(8));
+        return $prefix.'-'.$period->id.'-'.$category->id.'-'.$employee->id.'-'.strtoupper(Str::random(8));
     }
 
     /**
@@ -112,27 +187,30 @@ class CertificateService
         Category $category,
         string $certificateId,
         string $qrCodePath,
-        float $score
+        float $score,
+        string $type = 'best_employee'
     ): string {
         $qrCodeDataUrl = 'data:image/png;base64,'.base64_encode(Storage::get($qrCodePath));
         
         $backgroundPath = base_path('docs/background-cert.jpg');
         $backgroundDataUrl = '';
         if (File::exists($backgroundPath)) {
-            $type = pathinfo($backgroundPath, PATHINFO_EXTENSION);
+            $typeExt = pathinfo($backgroundPath, PATHINFO_EXTENSION);
             $data = File::get($backgroundPath);
-            $backgroundDataUrl = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            $backgroundDataUrl = 'data:image/' . $typeExt . ';base64,' . base64_encode($data);
         }
 
         $logoPath = base_path('docs/logo-pa-penajam.png');
         $logoDataUrl = '';
         if (File::exists($logoPath)) {
-            $type = pathinfo($logoPath, PATHINFO_EXTENSION);
+            $typeExt = pathinfo($logoPath, PATHINFO_EXTENSION);
             $data = File::get($logoPath);
-            $logoDataUrl = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            $logoDataUrl = 'data:image/' . $typeExt . ';base64,' . base64_encode($data);
         }
 
-        $html = view('certificates.template', [
+        $viewName = $type === 'discipline' ? 'certificates.discipline' : 'certificates.template';
+
+        $html = view($viewName, [
             'employee' => $employee,
             'period' => $period,
             'category' => $category,
@@ -155,25 +233,6 @@ class CertificateService
         Storage::put($fileName, $dompdf->output());
 
         return $fileName;
-    }
-
-    /**
-     * Generate certificates for all categories in a period.
-     */
-    public function generateForPeriod(Period $period): array
-    {
-        $categories = Category::all();
-        $results = [];
-
-        foreach ($categories as $category) {
-            $certificateData = $this->generateForWinner($period, $category);
-
-            if ($certificateData) {
-                $results[] = $certificateData;
-            }
-        }
-
-        return $results;
     }
 
     /**

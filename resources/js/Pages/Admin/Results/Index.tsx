@@ -183,14 +183,14 @@ export default function ResultsIndex({ periods, selectedPeriod, results }: PageP
                                                             key={`${result.category.id}-${row.employee.id}-${row.rank}`}
                                                             className={
                                                                 isWinner
-                                                                    ? 'bg-yellow-50 dark:bg-yellow-900/10'
+                                                                    ? 'bg-yellow-50 dark:bg-yellow-900/20'
                                                                     : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                                                             }
                                                         >
                                                             <td
                                                                 className={`px-4 py-3 text-sm font-semibold ${
                                                                     isWinner
-                                                                        ? 'text-gray-900 dark:text-gray-900'
+                                                                        ? 'text-gray-900 dark:text-yellow-400'
                                                                         : 'text-gray-900 dark:text-gray-100'
                                                                 }`}
                                                             >
@@ -199,16 +199,18 @@ export default function ResultsIndex({ periods, selectedPeriod, results }: PageP
                                                             <td
                                                                 className={`px-4 py-3 text-sm ${
                                                                     isWinner
-                                                                        ? 'text-gray-900 dark:text-gray-900'
+                                                                        ? 'text-gray-900 dark:text-gray-100'
                                                                         : 'text-gray-900 dark:text-gray-100'
                                                                 }`}
                                                             >
-                                                                {row.employee.nama}
+                                                                <span className={isWinner ? 'font-medium' : ''}>
+                                                                    {row.employee.nama}
+                                                                </span>
                                                                 {row.employee.unit_kerja ? (
                                                                     <div
                                                                         className={`text-xs ${
                                                                             isWinner
-                                                                                ? 'text-gray-600 dark:text-gray-700'
+                                                                                ? 'text-gray-600 dark:text-gray-400'
                                                                                 : 'text-gray-500 dark:text-gray-400'
                                                                         }`}
                                                                     >
@@ -219,7 +221,7 @@ export default function ResultsIndex({ periods, selectedPeriod, results }: PageP
                                                             <td
                                                                 className={`px-4 py-3 text-sm ${
                                                                     isWinner
-                                                                        ? 'text-gray-700 dark:text-gray-700'
+                                                                        ? 'text-gray-700 dark:text-gray-300'
                                                                         : 'text-gray-600 dark:text-gray-400'
                                                                 }`}
                                                             >
@@ -228,7 +230,7 @@ export default function ResultsIndex({ periods, selectedPeriod, results }: PageP
                                                             <td
                                                                 className={`px-4 py-3 text-sm ${
                                                                     isWinner
-                                                                        ? 'text-gray-700 dark:text-gray-700'
+                                                                        ? 'text-gray-700 dark:text-gray-300'
                                                                         : 'text-gray-600 dark:text-gray-400'
                                                                 }`}
                                                             >
@@ -237,7 +239,7 @@ export default function ResultsIndex({ periods, selectedPeriod, results }: PageP
                                                             <td
                                                                 className={`px-4 py-3 text-right text-sm font-medium ${
                                                                     isWinner
-                                                                        ? 'text-gray-900 dark:text-gray-900'
+                                                                        ? 'text-gray-900 dark:text-yellow-400'
                                                                         : 'text-gray-900 dark:text-gray-100'
                                                                 }`}
                                                             >
@@ -246,7 +248,7 @@ export default function ResultsIndex({ periods, selectedPeriod, results }: PageP
                                                             <td
                                                                 className={`px-4 py-3 text-right text-sm ${
                                                                     isWinner
-                                                                        ? 'text-gray-700 dark:text-gray-700'
+                                                                        ? 'text-gray-700 dark:text-gray-300'
                                                                         : 'text-gray-600 dark:text-gray-400'
                                                                 }`}
                                                             >
@@ -255,7 +257,7 @@ export default function ResultsIndex({ periods, selectedPeriod, results }: PageP
                                                             <td
                                                                 className={`px-4 py-3 text-right text-sm ${
                                                                     isWinner
-                                                                        ? 'text-gray-700 dark:text-gray-700'
+                                                                        ? 'text-gray-700 dark:text-gray-300'
                                                                         : 'text-gray-600 dark:text-gray-400'
                                                                 }`}
                                                             >

@@ -11,6 +11,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface CertificateRow {
     id: number;
     certificate_id: string;
+    type?: string;
     employee: {
         id: number;
         nama: string;
@@ -95,6 +96,7 @@ export default function CertificatesIndex({ certificates }: PageProps) {
                                         <th className="px-4 py-3">
                                             Sertifikat
                                         </th>
+                                        <th className="px-4 py-3">Jenis</th>
                                         <th className="px-4 py-3">Pegawai</th>
                                         <th className="px-4 py-3">Periode</th>
                                         <th className="px-4 py-3">Kategori</th>
@@ -120,6 +122,19 @@ export default function CertificatesIndex({ certificates }: PageProps) {
                                         >
                                             <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                                                 {cert.certificate_id}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span
+                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                        cert.type === 'discipline'
+                                                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                                    }`}
+                                                >
+                                                    {cert.type === 'discipline'
+                                                        ? 'Disiplin'
+                                                        : 'Terbaik'}
+                                                </span>
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                                                 {cert.employee.nama}
