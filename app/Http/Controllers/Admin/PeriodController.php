@@ -45,11 +45,18 @@ class PeriodController extends Controller
 
     public function show(Period $period): Response
     {
-        $period->load(['votes.voter', 'votes.employee.category']);
+        $period->loadCount('votes');
         $pendingVotersByCategory = $this->getPendingVotersByCategory($period);
+        $votes = Vote::query()
+            ->with(['voter', 'employee.category'])
+            ->where('period_id', $period->id)
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString();
 
         return Inertia::render('Admin/Periods/Show', [
             'period' => $period,
+            'votes' => $votes,
             'pendingVotersByCategory' => $pendingVotersByCategory,
         ]);
     }

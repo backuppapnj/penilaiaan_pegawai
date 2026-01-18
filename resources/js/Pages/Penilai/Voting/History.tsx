@@ -62,11 +62,30 @@ interface Vote {
     vote_details?: VoteDetail[];
 }
 
-interface PageProps {
-    votes?: Vote[];
+interface PaginationLink {
+    label: string;
+    url: string | null;
+    active: boolean;
 }
 
-export default function VotingHistory({ votes = [] }: PageProps) {
+interface PaginatedData {
+    current_page: number;
+    data: Vote[];
+    from: number;
+    last_page: number;
+    links: PaginationLink[];
+    next_page_url: string | null;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
+interface PageProps {
+    votes: PaginatedData;
+}
+
+export default function VotingHistory({ votes }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Riwayat Penilaian" />
@@ -91,7 +110,7 @@ export default function VotingHistory({ votes = [] }: PageProps) {
                     </Link>
                 </div>
 
-                {votes.length === 0 ? (
+                {votes.data.length === 0 ? (
                     <div className="rounded-xl border border-gray-200 bg-white p-12 text-center dark:border-gray-800 dark:bg-gray-900">
                         <AlertCircle className="mx-auto mb-4 size-12 text-gray-400" />
                         <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -110,7 +129,7 @@ export default function VotingHistory({ votes = [] }: PageProps) {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {votes.map((vote) => {
+                        {votes.data.map((vote) => {
                             const voteDetails =
                                 vote.voteDetails ?? vote.vote_details ?? [];
 
@@ -235,6 +254,41 @@ export default function VotingHistory({ votes = [] }: PageProps) {
                             </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {votes.last_page > 1 && (
+                    <div className="flex items-center justify-between rounded-xl border border-sidebar-border/70 bg-white px-6 py-4 dark:border-sidebar-border dark:bg-gray-900">
+                        <div className="text-sm text-gray-700 dark:text-gray-300">
+                            Menampilkan {votes.from} - {votes.to} dari{' '}
+                            {votes.total} penilaian
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={votes.prev_page_url || '#'}
+                                className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                                    !votes.prev_page_url
+                                        ? 'cursor-not-allowed opacity-50'
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                }`}
+                            >
+                                Sebelumnya
+                            </Link>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                                Halaman {votes.current_page} dari{' '}
+                                {votes.last_page}
+                            </span>
+                            <Link
+                                href={votes.next_page_url || '#'}
+                                className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                                    !votes.next_page_url
+                                        ? 'cursor-not-allowed opacity-50'
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                }`}
+                            >
+                                Berikutnya
+                            </Link>
+                        </div>
                     </div>
                 )}
             </div>

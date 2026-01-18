@@ -4,16 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Certificate;
 use App\Models\Period;
+use App\Services\CertificateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Services\CertificateService;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class CertificateController extends Controller
 {
     public function __construct(
         private CertificateService $certificateService
-    ) {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -46,6 +47,41 @@ class CertificateController extends Controller
             ]);
 
         return inertia('Peserta/Certificates/View', [
+            'certificates' => $certificates,
+        ]);
+    }
+
+    public function adminIndex(Request $request): Response
+    {
+        $certificates = Certificate::query()
+            ->with(['employee', 'period', 'category'])
+            ->orderByDesc('issued_at')
+            ->paginate(20)
+            ->withQueryString()
+            ->through(fn ($cert) => [
+                'id' => $cert->id,
+                'certificate_id' => $cert->certificate_id,
+                'employee' => [
+                    'id' => $cert->employee->id,
+                    'nama' => $cert->employee->nama,
+                    'nip' => $cert->employee->nip,
+                ],
+                'period' => [
+                    'id' => $cert->period->id,
+                    'name' => $cert->period->name,
+                ],
+                'category' => [
+                    'id' => $cert->category->id,
+                    'nama' => $cert->category->nama,
+                ],
+                'rank' => $cert->rank,
+                'score' => $cert->score,
+                'issued_at' => $cert->issued_at,
+                'download_url' => route('peserta.certificates.download', $cert),
+                'verification_url' => $cert->verification_url,
+            ]);
+
+        return Inertia::render('Admin/Certificates/Index', [
             'certificates' => $certificates,
         ]);
     }

@@ -9,253 +9,321 @@
             margin: 0;
             size: A4 landscape;
         }
-        body {
+        html, body {
             margin: 0;
             padding: 0;
-            font-family: 'Times New Roman', Times, serif;
-        }
-        .certificate-container {
-            width: 297mm;
-            height: 210mm;
-            padding: 20mm;
-            box-sizing: border-box;
-            position: relative;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: 10px solid #1a365d;
-        }
-        .certificate-inner {
             width: 100%;
             height: 100%;
-            background: white;
-            border: 3px solid #1a365d;
-            padding: 40px;
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #ffffff;
             box-sizing: border-box;
+        }
+        
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
+
+        /* Container Utama */
+        .page-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 297mm;
+            height: 210mm;
+            background: #fff;
+            overflow: hidden; /* Mencegah elemen keluar halaman */
+        }
+
+        /* Frame Luar (Navy) 
+           A4 Size: 297mm x 210mm
+           Margin: 10mm
+           Width: 297 - 20 = 277mm
+           Height: 210 - 20 = 190mm
+        */
+        .outer-frame {
+            position: absolute;
+            top: 10mm;
+            left: 10mm;
+            width: 277mm;
+            height: 190mm;
+            border: 3mm solid #1a365d; /* Navy Blue */
+            background: white;
+            z-index: 10;
+        }
+
+        /* Container Garis Emas 
+           Margin dari Outer: 4mm
+           Width: 277 - 8 = 269mm
+           Height: 190 - 8 = 182mm
+        */
+        .gold-container {
+            position: absolute;
+            top: 4mm; 
+            left: 4mm;
+            width: 269mm;
+            height: 182mm;
+            z-index: 11;
+        }
+
+        /* Frame Dalam (Gold Line) */
+        .inner-frame {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #b79c5a;
+            position: relative; /* Untuk konteks corner */
+        }
+
+        /* Ornamen Sudut (Dikembalikan & Diperbaiki) */
+        .corner {
+            position: absolute;
+            width: 25mm; /* Sedikit diperkecil agar rapi */
+            height: 25mm;
+            border: 4px double #1a365d; /* Kembalikan style double border */
+            z-index: 12;
+        }
+
+        .corner-tl {
+            top: -2mm; /* Geser sedikit agar menumpuk manis di sudut garis emas */
+            left: -2mm;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .corner-tr {
+            top: -2mm;
+            right: -2mm;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .corner-bl {
+            bottom: -2mm;
+            left: -2mm;
+            border-right: none;
+            border-top: none;
+        }
+
+        .corner-br {
+            bottom: -2mm;
+            right: -2mm;
+            border-left: none;
+            border-top: none;
+        }
+
+        .content {
+            position: absolute;
+            top: 12mm;
+            left: 20mm;
+            right: 20mm;
+            bottom: 15mm;
             text-align: center;
-            position: relative;
+            z-index: 20;
         }
-        .header {
-            margin-bottom: 30px;
+
+        .logo {
+            height: 22mm;
+            margin-bottom: 2mm;
         }
-        .header h1 {
+
+        h1 {
             color: #1a365d;
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0 0 10px 0;
+            font-size: 16pt;
             text-transform: uppercase;
             letter-spacing: 2px;
-        }
-        .header h2 {
-            color: #2c5282;
-            font-size: 28px;
+            margin: 1mm 0;
             font-weight: bold;
-            margin: 0 0 20px 0;
+        }
+
+        h2 {
+            color: #b79c5a;
+            font-size: 24pt;
             text-transform: uppercase;
+            margin: 3mm 0;
+            font-family: serif;
+            font-weight: normal;
+            letter-spacing: 3px;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            display: inline-block;
+            padding: 1mm 8mm;
         }
-        .divider {
-            width: 80%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #1a365d, transparent);
-            margin: 0 auto 30px auto;
-        }
+
         .category {
-            font-size: 18px;
-            color: #4a5568;
-            margin-bottom: 20px;
+            font-size: 12pt;
+            color: #1a365d;
+            margin-top: 1mm;
             font-style: italic;
         }
-        .recipient {
-            margin: 40px 0;
-        }
+
         .recipient-label {
-            font-size: 16px;
-            color: #718096;
-            margin-bottom: 10px;
+            margin-top: 6mm;
+            font-size: 11pt;
+            color: #666;
+            font-style: italic;
         }
+
         .recipient-name {
-            font-size: 36px;
+            font-size: 28pt;
             color: #1a365d;
             font-weight: bold;
-            margin: 10px 0;
+            margin: 1mm 0;
             text-transform: uppercase;
+            font-family: 'Times New Roman', serif;
         }
-        .recipient-details {
-            font-size: 18px;
+
+        .recipient-detail {
+            font-size: 12pt;
             color: #4a5568;
-            margin: 5px 0;
         }
-        .period {
-            margin: 30px 0;
-            font-size: 18px;
+
+        .description {
+            margin: 4mm auto;
+            width: 85%;
+            font-size: 11pt;
+            line-height: 1.4;
             color: #2d3748;
         }
-        .period-label {
+
+        .score-box {
+            display: inline-block;
+            background: #f7fafc;
+            border: 1px dashed #b79c5a;
+            padding: 3px 10px;
+            border-radius: 4px;
             font-weight: bold;
-        }
-        .content {
-            font-size: 16px;
-            color: #4a5568;
-            line-height: 1.8;
-            margin: 20px 0;
-            font-style: italic;
-        }
-        .footer {
-            margin-top: 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-        .qr-section {
-            text-align: center;
-        }
-        .qr-section img {
-            width: 120px;
-            height: 120px;
-            border: 2px solid #1a365d;
-            padding: 5px;
-            background: white;
-        }
-        .qr-section p {
-            font-size: 12px;
-            color: #718096;
-            margin: 10px 0 0 0;
-        }
-        .signature-section {
-            text-align: center;
-            margin-right: 80px;
-        }
-        .signature-label {
-            font-size: 14px;
-            color: #718096;
-            margin-bottom: 60px;
-        }
-        .signature-name {
-            font-size: 16px;
             color: #1a365d;
+            margin-top: 3px;
+            font-size: 10pt;
+        }
+
+        /* Footer / Tanda Tangan */
+        .footer-table {
+            width: 100%;
+            margin-top: 8mm;
+        }
+        .footer-table td {
+            vertical-align: bottom;
+            text-align: center;
+        }
+        
+        .signature-wrapper {
+            display: inline-block;
+            text-align: center;
+            width: 100%; /* Pastikan full width dari cell */
+        }
+
+        .signature-line {
+            width: 80%; /* Garis tidak full width agar manis */
+            margin: 0 auto;
+            border-bottom: 1.5px solid #1a365d;
+            margin-bottom: 5px;
+            margin-top: 20mm;
+        }
+
+        .sign-name {
             font-weight: bold;
-            text-decoration: underline;
+            color: #1a365d;
+            font-size: 12pt;
+            display: block; /* Pastikan block agar bisa dicenter text-align */
+            width: 100%;
         }
-        .signature-title {
-            font-size: 14px;
+        .sign-nip {
+            font-size: 10pt;
+            color: #666;
+        }
+        .date-text {
+            margin-bottom: 1mm;
             color: #4a5568;
-            margin-top: 5px;
+            font-size: 11pt;
         }
-        .date {
-            font-size: 14px;
-            color: #4a5568;
-            text-align: left;
-            margin-left: 100px;
-        }
-        .watermark {
+
+        .watermark-logo {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 100px;
-            color: rgba(26, 54, 93, 0.03);
-            font-weight: bold;
-            text-transform: uppercase;
-            z-index: 0;
+            width: 70mm;
+            opacity: 0.07;
+            z-index: 5;
             pointer-events: none;
-        }
-        .border-decoration {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-        }
-        .corner {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            border: 3px solid #1a365d;
-        }
-        .corner-tl {
-            top: 10px;
-            left: 10px;
-            border-right: none;
-            border-bottom: none;
-        }
-        .corner-tr {
-            top: 10px;
-            right: 10px;
-            border-left: none;
-            border-bottom: none;
-        }
-        .corner-bl {
-            bottom: 10px;
-            left: 10px;
-            border-right: none;
-            border-top: none;
-        }
-        .corner-br {
-            bottom: 10px;
-            right: 10px;
-            border-left: none;
-            border-top: none;
         }
     </style>
 </head>
 <body>
-    <div class="certificate-container">
-        <div class="certificate-inner">
-            <div class="watermark">Sertifikat</div>
-
-            <div class="border-decoration">
+    <div class="page-container">
+        <!-- Frame Borders -->
+        <div class="outer-frame">
+            <!-- Gunakan Gold Container sebagai wrapper agar posisi relatif terhadap Navy frame lebih aman -->
+            <div class="gold-container">
+                <div class="inner-frame"></div>
+                
+                <!-- Corners -->
                 <div class="corner corner-tl"></div>
                 <div class="corner corner-tr"></div>
                 <div class="corner corner-bl"></div>
                 <div class="corner corner-br"></div>
             </div>
 
-            <div class="header">
-                @if(file_exists(public_path('images/logo-pa.png')))
-                    <img src="{{ asset('images/logo-pa.png') }}" alt="Logo PA Penajam" style="max-height: 80px; margin-bottom: 20px;">
+            <!-- Watermark Logo -->
+            @if(isset($logoDataUrl) && $logoDataUrl)
+                <img src="{{ $logoDataUrl }}" class="watermark-logo" alt="Watermark">
+            @endif
+
+            <!-- Main Content -->
+            <div class="content">
+                <!-- Header -->
+                @if(isset($logoDataUrl) && $logoDataUrl)
+                    <img src="{{ $logoDataUrl }}" class="logo" alt="Logo Instansi">
+                @elseif(file_exists(public_path('images/logo-pa.png')))
+                    <img src="{{ asset('images/logo-pa.png') }}" class="logo" alt="Logo">
                 @endif
-                <h1>Pengadilan Agama Penajam</h1>
-                <div class="divider"></div>
-                <h2>Sertifikat Pegawai Terbaik</h2>
-            </div>
+                
+                <h1>{{ $institution_name }}</h1>
+                
+                <h2>Sertifikat Penghargaan</h2>
+                
+                <div class="category">
+                    Kategori: <strong>{{ $category->nama }}</strong>
+                </div>
 
-            <div class="category">
-                Kategori: {{ $category->nama }}
-            </div>
-
-            <div class="recipient">
+                <!-- Recipient -->
                 <div class="recipient-label">Diberikan kepada:</div>
                 <div class="recipient-name">{{ $employee->nama }}</div>
-                <div class="recipient-details">
-                    NIP: {{ $employee->nip }}<br>
-                    {{ $employee->jabatan }}
-                </div>
-            </div>
-
-            <div class="content">
-                Atas prestasinya sebagai pegawai terbaik pada kategori<br>
-                <strong>{{ $category->nama }}</strong> dengan perolehan skor <strong>{{ number_format($score, 2) }}</strong>
-            </div>
-
-            <div class="period">
-                <span class="period-label">Periode:</span> {{ $period->name }}
-                ({{ ucfirst($period->semester) }} {{ $period->year }})
-            </div>
-
-            <div class="footer">
-                <div class="date">
-                    Penajam, {{ $issuedDate }}
+                <div class="recipient-detail">
+                    NIP. {{ $employee->nip }} | {{ $employee->jabatan }}
                 </div>
 
-                <div class="qr-section">
-                    <img src="{{ $qrCodeDataUrl }}" alt="QR Code Verifikasi">
-                    <p>Scan untuk verifikasi</p>
+                <!-- Description -->
+                <div class="description">
+                    Atas dedikasi, integritas, dan kinerja luar biasa yang telah ditunjukkan sebagai Pegawai Terbaik<br>
+                    pada Periode <strong>{{ $period->name }} ({{ ucfirst($period->semester) }} {{ $period->year }})</strong>
+                    <br>
+                    <div class="score-box">
+                        Total Skor Penilaian: {{ number_format($score, 2) }}
+                    </div>
                 </div>
 
-                <div class="signature-section">
-                    <div class="signature-label">Ketua Pengadilan Agama Penajam</div>
-                    <div class="signature-name">Dr. H. Muhammad Syafi'i, S.H.I., M.H.I.</div>
-                    <div class="signature-title">NIP. 19700512 199503 1 002</div>
-                </div>
+                <!-- Footer -->
+                <table class="footer-table">
+                    <tr>
+                        <td style="width: 30%;">
+                            <img src="{{ $qrCodeDataUrl }}" style="width: 22mm; border: 1px solid #ddd; padding: 2px;" alt="QR">
+                            <div style="font-size: 8pt; margin-top: 2px; color: #888;">ID: {{ $certificateId }}</div>
+                        </td>
+                        <td style="width: 25%;"></td>
+                        <td style="width: 45%;">
+                            <div class="signature-wrapper">
+                                <div class="date-text">Penajam, {{ $issuedDate }}</div>
+                                <div style="font-weight: bold; color: #1a365d;">{{ $chairman_role }}</div>
+                                
+                                <div class="signature-line"></div>
+                                
+                                <div class="sign-name">{{ $chairman_name }}</div>
+                                <div class="sign-nip">NIP. {{ $chairman_nip }}</div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>

@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Edit, Loader2, Trophy, Users } from 'lucide-react';
+import { ArrowLeft, Award, Edit, Loader2, Trophy, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -59,12 +59,32 @@ interface Period {
     end_date_formatted?: string;
     status: 'draft' | 'open' | 'closed' | 'announced';
     notes: string | null;
-    votes: Vote[];
     scores?: Score[];
+    votes_count: number;
+}
+
+interface PaginationLink {
+    label: string;
+    url: string | null;
+    active: boolean;
+}
+
+interface PaginatedVotes {
+    current_page: number;
+    data: Vote[];
+    from: number;
+    last_page: number;
+    links: PaginationLink[];
+    next_page_url: string | null;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
 }
 
 interface PageProps {
     period: Period;
+    votes: PaginatedVotes;
     pendingVotersByCategory?: PendingCategory[];
 }
 
@@ -86,9 +106,11 @@ interface PendingCategory {
 
 export default function ShowPeriod({
     period,
+    votes,
     pendingVotersByCategory = [],
 }: PageProps) {
     const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [generatingCertificates, setGeneratingCertificates] = useState(false);
     const [statusDialogOpen, setStatusDialogOpen] = useState(false);
     const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
@@ -110,6 +132,17 @@ export default function ShowPeriod({
                     setStatusDialogOpen(false);
                     setPendingStatus(null);
                 },
+            },
+        );
+    };
+
+    const handleGenerateCertificates = () => {
+        setGeneratingCertificates(true);
+        router.post(
+            `/admin/periods/${period.id}/generate-certificates`,
+            {},
+            {
+                onFinish: () => setGeneratingCertificates(false),
             },
         );
     };
@@ -229,7 +262,7 @@ export default function ShowPeriod({
                             </dl>
                         </div>
 
-                        {period.votes.length > 0 && (
+                        {votes.data.length > 0 && (
                             <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 dark:bg-gray-900">
                                 <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
                                     Daftar Voting
@@ -250,7 +283,7 @@ export default function ShowPeriod({
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                                            {period.votes.map((vote) => (
+                                            {votes.data.map((vote) => (
                                                 <tr
                                                     key={vote.id}
                                                     className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
@@ -278,6 +311,41 @@ export default function ShowPeriod({
                                         </tbody>
                                     </table>
                                 </div>
+
+                                {votes.last_page > 1 && (
+                                    <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-800">
+                                        <div className="text-sm text-gray-700 dark:text-gray-300">
+                                            Menampilkan {votes.from} - {votes.to}{' '}
+                                            dari {votes.total} voting
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Link
+                                                href={votes.prev_page_url || '#'}
+                                                className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                                                    !votes.prev_page_url
+                                                        ? 'cursor-not-allowed opacity-50'
+                                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                }`}
+                                            >
+                                                Sebelumnya
+                                            </Link>
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                Halaman {votes.current_page}{' '}
+                                                dari {votes.last_page}
+                                            </span>
+                                            <Link
+                                                href={votes.next_page_url || '#'}
+                                                className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                                                    !votes.next_page_url
+                                                        ? 'cursor-not-allowed opacity-50'
+                                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                }`}
+                                            >
+                                                Berikutnya
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -351,7 +419,7 @@ export default function ShowPeriod({
                                         Total Voting
                                     </dt>
                                     <dd className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                        {period.votes.length}
+                                        {period.votes_count}
                                     </dd>
                                 </div>
                                 <div className="flex items-center justify-between">
@@ -364,6 +432,33 @@ export default function ShowPeriod({
                                     </dd>
                                 </div>
                             </dl>
+                        </div>
+
+                        <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 dark:bg-gray-900">
+                            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                Sertifikat
+                            </h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Generate sertifikat pemenang untuk periode ini.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleGenerateCertificates}
+                                disabled={generatingCertificates}
+                                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {generatingCertificates ? (
+                                    <>
+                                        <Loader2 className="size-4 animate-spin" />
+                                        Memproses...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Award className="size-4" />
+                                        Generate Sertifikat
+                                    </>
+                                )}
+                            </button>
                         </div>
 
                         <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 dark:bg-gray-900">

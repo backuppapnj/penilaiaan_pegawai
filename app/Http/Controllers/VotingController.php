@@ -275,7 +275,8 @@ class VotingController extends Controller
         $votes = Vote::with(['period', 'employee', 'category', 'voteDetails.criterion'])
             ->where('voter_id', $voterId)
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Penilai/Voting/History', [
             'votes' => $votes,

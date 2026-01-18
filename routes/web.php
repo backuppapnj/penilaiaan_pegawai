@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CriterionController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\ExcelImportController;
 use App\Http\Controllers\Admin\PeriodController;
+use App\Http\Controllers\Admin\ResultsController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\VotingController;
@@ -81,6 +82,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::prefix('admin')->name('admin.')->middleware('role:Admin,SuperAdmin')->group(function () {
+        Route::get('/results', [ResultsController::class, 'index'])->name('results.index');
+        Route::get('/certificates', [CertificateController::class, 'adminIndex'])->name('certificates.index');
+
         // Period management
         Route::prefix('periods')->name('periods.')->group(function () {
             Route::get('/', [PeriodController::class, 'index'])->name('index');

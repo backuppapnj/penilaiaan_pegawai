@@ -10,6 +10,7 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\RoundBlockSizeMode;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -114,6 +115,22 @@ class CertificateService
         float $score
     ): string {
         $qrCodeDataUrl = 'data:image/png;base64,'.base64_encode(Storage::get($qrCodePath));
+        
+        $backgroundPath = base_path('docs/background-cert.jpg');
+        $backgroundDataUrl = '';
+        if (File::exists($backgroundPath)) {
+            $type = pathinfo($backgroundPath, PATHINFO_EXTENSION);
+            $data = File::get($backgroundPath);
+            $backgroundDataUrl = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+
+        $logoPath = base_path('docs/logo-pa-penajam.png');
+        $logoDataUrl = '';
+        if (File::exists($logoPath)) {
+            $type = pathinfo($logoPath, PATHINFO_EXTENSION);
+            $data = File::get($logoPath);
+            $logoDataUrl = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
 
         $html = view('certificates.template', [
             'employee' => $employee,
@@ -121,11 +138,14 @@ class CertificateService
             'category' => $category,
             'certificateId' => $certificateId,
             'qrCodeDataUrl' => $qrCodeDataUrl,
+            'backgroundDataUrl' => $backgroundDataUrl,
+            'logoDataUrl' => $logoDataUrl,
             'score' => $score,
             'issuedDate' => now()->translatedFormat('d F Y'),
+            ...$this->getOrganizationContext(),
         ])->render();
 
-        $dompdf = new Dompdf();
+        $dompdf = new Dompdf;
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
@@ -154,5 +174,43 @@ class CertificateService
         }
 
         return $results;
+    }
+
+    /**
+     * @return array{
+     *     institution_name: string,
+     *     chairman_name: string,
+     *     chairman_nip: string,
+     *     chairman_role: string
+     * }
+     */
+    private function getOrganizationContext(): array
+    {
+        $defaults = [
+            'institution_name' => 'Pengadilan Agama Penajam',
+            'chairman_name' => "Dr. H. Muhammad Syafi'i, S.H.I., M.H.I.",
+            'chairman_nip' => '19700512 199503 1 002',
+            'chairman_role' => 'Ketua',
+        ];
+
+        $path = base_path('docs/org_structure.json');
+        if (! File::exists($path)) {
+            return $defaults;
+        }
+
+        $org = json_decode(File::get($path), true);
+        if (! is_array($org)) {
+            return $defaults;
+        }
+
+        $chairman = collect($org['pimpinan'] ?? [])
+            ->first(fn ($leader) => ($leader['role'] ?? '') === 'Ketua');
+
+        return [
+            'institution_name' => $org['instansi'] ?? $defaults['institution_name'],
+            'chairman_name' => $chairman['nama'] ?? $defaults['chairman_name'],
+            'chairman_nip' => $chairman['nip'] ?? $defaults['chairman_nip'],
+            'chairman_role' => $chairman['role'] ?? $defaults['chairman_role'],
+        ];
     }
 }

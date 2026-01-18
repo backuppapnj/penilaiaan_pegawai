@@ -21,6 +21,7 @@ import {
     History,
     LayoutGrid,
     Settings2,
+    Trophy,
     UserCog,
     Users,
 } from 'lucide-react';
@@ -95,6 +96,18 @@ export function AppSidebar() {
                 title: 'Manajemen Periode',
                 href: '/admin/periods',
                 icon: Users, // Using Users icon as generic management icon, or Calendar if available
+            });
+
+            items.push({
+                title: 'Hasil Penilaian',
+                href: '/admin/results',
+                icon: Trophy,
+            });
+
+            items.push({
+                title: 'Sertifikat Pemenang',
+                href: '/admin/certificates',
+                icon: Award,
             });
 
             items.push({

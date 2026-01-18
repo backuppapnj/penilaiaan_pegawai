@@ -12,6 +12,7 @@ use App\Models\Period;
 use App\Models\Vote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -396,15 +397,7 @@ class DashboardController extends Controller
             ];
 
             if ($announcedPeriod) {
-                $myRankings = Certificate::where('period_id', $announcedPeriod->id)
-                    ->where('employee_id', $employee->id)
-                    ->with('category')
-                    ->get()
-                    ->map(fn ($cert) => [
-                        'category' => $cert->category->nama,
-                        'rank' => $cert->rank,
-                        'score' => $cert->score,
-                    ]);
+                $myRankings = $this->buildEmployeeRankings($announcedPeriod, $employee);
             }
 
             $myCertificates = Certificate::where('employee_id', $employee->id)
@@ -441,5 +434,76 @@ class DashboardController extends Controller
             'my_rankings' => is_array($myRankings) ? $myRankings : $myRankings->toArray(),
             'my_certificates' => is_array($myCertificates) ? $myCertificates : $myCertificates->toArray(),
         ];
+    }
+
+    /**
+     * @return array<int, array{
+     *     category: string,
+     *     rank: int,
+     *     score: float,
+     *     votes_count: int,
+     *     average_score: float
+     * }>
+     */
+    private function buildEmployeeRankings(Period $period, Employee $employee): array
+    {
+        $categories = Category::query()
+            ->orderBy('urutan')
+            ->get(['id', 'nama']);
+
+        $aggregates = Vote::query()
+            ->select(
+                'category_id',
+                'employee_id',
+                DB::raw('sum(total_score) as total_score'),
+                DB::raw('count(*) as votes_count')
+            )
+            ->where('period_id', $period->id)
+            ->groupBy('category_id', 'employee_id')
+            ->get()
+            ->groupBy('category_id');
+
+        $rankings = [];
+
+        foreach ($categories as $category) {
+            $rows = $aggregates->get($category->id, collect())
+                ->sortByDesc('total_score')
+                ->values();
+
+            if ($rows->isEmpty()) {
+                continue;
+            }
+
+            $rank = 1;
+            $index = 0;
+            $previousScore = null;
+
+            foreach ($rows as $row) {
+                $index++;
+                $score = (float) $row->total_score;
+
+                if ($previousScore !== null && $score < $previousScore) {
+                    $rank = $index;
+                }
+
+                $previousScore = $score;
+
+                if ((int) $row->employee_id === $employee->id) {
+                    $votesCount = (int) $row->votes_count;
+                    $averageScore = $votesCount > 0 ? round($score / $votesCount, 2) : 0.0;
+
+                    $rankings[] = [
+                        'category' => $category->nama,
+                        'rank' => $rank,
+                        'score' => round($score, 2),
+                        'votes_count' => $votesCount,
+                        'average_score' => $averageScore,
+                    ];
+                    break;
+                }
+            }
+        }
+
+        return $rankings;
     }
 }
