@@ -95,11 +95,11 @@ class ResultsController extends Controller
                 DB::raw('sum(total_score) as total_score')
             )
             ->where('period_id', $periodId)
-            ->where('category_id', $categoryId)
+            ->where('category_id', $categoryId) // Ini sudah memfilter berdasarkan kategori yang diminta (1 atau 2), jadi kategori 3 otomatis tidak ikut.
             ->groupBy('employee_id')
             ->orderByDesc('total_score')
             ->get();
-
+// ...
         if ($aggregates->isEmpty()) {
             return [];
         }

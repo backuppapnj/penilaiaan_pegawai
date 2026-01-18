@@ -5,17 +5,47 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Employee;
 use App\Models\Period;
+use App\Models\Vote;
 use Dompdf\Dompdf;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\RoundBlockSizeMode;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CertificateService
 {
+    /**
+     * Generate certificates for all categories in a period.
+     */
+    public function generateForPeriod(Period $period): array
+    {
+        $results = [];
+
+        // 1. Generate Best Employee Certificates (Kategori 1 & 2)
+        $mainCategories = Category::whereIn('id', [1, 2])->get();
+        foreach ($mainCategories as $category) {
+            $bestEmployeeCert = $this->generateForWinner($period, $category);
+            if ($bestEmployeeCert) {
+                $results[] = $bestEmployeeCert;
+            }
+        }
+
+        // 2. Generate Discipline Certificate (Kategori 3)
+        $disciplineCategory = Category::find(3);
+        if ($disciplineCategory) {
+            $disciplineCert = $this->generateForDisciplineWinner($period, $disciplineCategory);
+            if ($disciplineCert) {
+                $results[] = $disciplineCert;
+            }
+        }
+
+        return $results;
+    }
+
     /**
      * Generate certificate for a winner in a specific period and category.
      */
@@ -28,10 +58,10 @@ class CertificateService
         }
 
         $certificateId = $this->generateCertificateId($period, $category, $winner);
-        $totalScore = $this->calculateWinnerScore($winner, $period);
+        $totalScore = $this->calculateWinnerScore($winner, $period, $category->id);
 
         $qrCodePath = $this->generateQrCode($certificateId);
-        $pdfPath = $this->generatePdf($winner, $period, $category, $certificateId, $qrCodePath, $totalScore);
+        $pdfPath = $this->generatePdf($winner, $period, $category, $certificateId, $qrCodePath, $totalScore, 'best_employee');
 
         return [
             'certificate_id' => $certificateId,
@@ -52,69 +82,57 @@ class CertificateService
      */
     protected function getWinner(Period $period, Category $category): ?Employee
     {
-        return Employee::where('category_id', $category->id)
-            ->with(['votesReceived' => function ($query) use ($period) {
-                $query->where('period_id', $period->id);
-            }])
-            ->get()
-            ->sortByDesc(function ($employee) {
-                return $employee->votesReceived->sum('total_score');
-            })
+        $winnerData = Vote::query()
+            ->select('employee_id', DB::raw('sum(total_score) as total'))
+            ->where('period_id', $period->id)
+            ->where('category_id', $category->id) // Filter kategori Pejabat/Non-Pejabat
+            ->groupBy('employee_id')
+            ->orderByDesc('total')
             ->first();
+
+        if (! $winnerData) {
+            return null;
+        }
+
+        return Employee::find($winnerData->employee_id);
     }
 
     /**
      * Calculate the total score for a winner employee.
      */
-    protected function calculateWinnerScore(Employee $employee, Period $period): float
+    protected function calculateWinnerScore(Employee $employee, Period $period, int $categoryId): float
     {
-        return (float) $employee->votesReceived->sum('total_score');
+        // Paksa hanya menjumlahkan vote dari kategori yang relevan
+        return (float) Vote::query()
+            ->where('period_id', $period->id)
+            ->where('employee_id', $employee->id)
+            ->where('category_id', $categoryId)
+            ->sum('total_score');
     }
 
     /**
-     * Generate certificates for all categories in a period.
-     */
-    public function generateForPeriod(Period $period): array
-    {
-        $categories = Category::all();
-        $results = [];
-
-        foreach ($categories as $category) {
-            // 1. Generate Best Employee Certificate (Voting)
-            $bestEmployeeCert = $this->generateForWinner($period, $category);
-            if ($bestEmployeeCert) {
-                $results[] = $bestEmployeeCert;
-            }
-
-            // 2. Generate Discipline Certificate (Discipline Score)
-            $disciplineCert = $this->generateForDisciplineWinner($period, $category);
-            if ($disciplineCert) {
-                $results[] = $disciplineCert;
-            }
-        }
-
-        return $results;
-    }
-
-    /**
-     * Generate certificate for a discipline winner in a specific period and category.
+     * Generate certificate for a discipline winner.
      */
     public function generateForDisciplineWinner(Period $period, Category $category, int $rank = 1): ?array
     {
-        $winner = $this->getDisciplineWinner($period, $category);
+        // Cari pemenang dari kategori 3 (Pegawai Disiplin)
+        $winnerData = Vote::query()
+            ->select('employee_id', DB::raw('sum(total_score) as total'))
+            ->where('period_id', $period->id)
+            ->where('category_id', 3) 
+            ->groupBy('employee_id')
+            ->orderByDesc('total')
+            ->first();
 
-        if (! $winner) {
+        if (! $winnerData) {
             return null;
         }
 
+        $winner = Employee::find($winnerData->employee_id);
+        $totalScore = (float) $winnerData->total;
+
         $certificateId = $this->generateCertificateId($period, $category, $winner, 'DIS');
         
-        // Ambil skor disiplin
-        $totalScore = (float) \App\Models\DisciplineScore::query()
-            ->where('period_id', $period->id)
-            ->where('employee_id', $winner->id)
-            ->value('final_score') ?? 0;
-
         $qrCodePath = $this->generateQrCode($certificateId);
         $pdfPath = $this->generatePdf($winner, $period, $category, $certificateId, $qrCodePath, $totalScore, 'discipline');
 
@@ -130,19 +148,6 @@ class CertificateService
             'pdf_path' => $pdfPath,
             'issued_at' => now(),
         ];
-    }
-
-    /**
-     * Get the discipline winner employee for a specific period and category.
-     */
-    protected function getDisciplineWinner(Period $period, Category $category): ?Employee
-    {
-        return Employee::where('category_id', $category->id)
-            ->join('discipline_scores', 'employees.id', '=', 'discipline_scores.employee_id')
-            ->where('discipline_scores.period_id', $period->id)
-            ->orderByDesc('discipline_scores.final_score')
-            ->select('employees.*')
-            ->first();
     }
 
     /**
