@@ -127,6 +127,7 @@ class CertificateService
 
     /**
      * Calculate the average score for a winner employee.
+     * Returns the average score per criteria (total average / number of criteria).
      */
     protected function calculateAverageScore(Employee $employee, Period $period, int $categoryId): float
     {
@@ -143,7 +144,18 @@ class CertificateService
         $totalScore = $votes->sum('total_score');
         $voterCount = $votes->count();
 
-        return round($totalScore / $voterCount, 2);
+        // First calculate average across all voters
+        $averageAcrossVoters = $totalScore / $voterCount;
+
+        // Count criteria for this category
+        $criteriaCount = Criterion::where('category_id', $categoryId)->count();
+
+        if ($criteriaCount === 0) {
+            return round($averageAcrossVoters, 2);
+        }
+
+        // Divide by criteria count to get average per criteria
+        return round($averageAcrossVoters / $criteriaCount, 2);
     }
 
     /**
@@ -245,9 +257,18 @@ class CertificateService
      */
     protected function getDisciplineScoreData(Employee $employee, Period $period): array
     {
+        // First try to find by period_id
         $disciplineScore = DisciplineScore::where('employee_id', $employee->id)
             ->where('period_id', $period->id)
             ->first();
+
+        // If not found, try to find by year (fallback for old data without period_id)
+        if (! $disciplineScore) {
+            $disciplineScore = DisciplineScore::where('employee_id', $employee->id)
+                ->where('year', $period->year)
+                ->orderByDesc('final_score')
+                ->first();
+        }
 
         if (! $disciplineScore) {
             return [
@@ -376,9 +397,11 @@ class CertificateService
             ...$organizationContext,
         ])->render();
 
-        // Generate back page
-        $backViewName = $type === 'discipline' ? 'certificates.discipline-back' : 'certificates.template-back';
-        $backHtml = view($backViewName, [
+        // Generate back page content (partial without html/body wrapper)
+        $backPartialName = $type === 'discipline'
+            ? 'certificates.partials.discipline-back-content'
+            : 'certificates.partials.template-back-content';
+        $backContent = view($backPartialName, [
             'employee' => $employee,
             'period' => $period,
             'category' => $category,
@@ -388,8 +411,8 @@ class CertificateService
             ...$organizationContext,
         ])->render();
 
-        // Combine both pages with page break
-        $combinedHtml = $frontHtml.'<div style="page-break-after: always;"></div>'.$backHtml;
+        // Insert back page content before </body> tag
+        $combinedHtml = str_replace('</body>', $backContent.'</body>', $frontHtml);
 
         $dompdf = new Dompdf;
         $dompdf->loadHtml($combinedHtml);
