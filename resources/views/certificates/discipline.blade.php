@@ -244,7 +244,7 @@
                 pada Periode <strong>{{ $period->name }} ({{ ucfirst($period->semester) }} {{ $period->year }})</strong>
                 <br>
                 <div class="score-box">
-                    Total Skor Disiplin: {{ number_format($score, 2) }}
+                    Total Skor Disiplin: {{ number_format($score,0,",",".") }}
                 </div>
             </div>
         </div>
