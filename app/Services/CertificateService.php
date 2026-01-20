@@ -257,20 +257,87 @@ class CertificateService
      */
     protected function getDisciplineScoreData(Employee $employee, Period $period): array
     {
-        // First try to find by period_id
-        $disciplineScore = DisciplineScore::where('employee_id', $employee->id)
-            ->where('period_id', $period->id)
+        // First, try to get the data from Vote (this is what UI displays)
+        // because DisciplineVoteService already calculated the proper averages
+        $vote = Vote::where('period_id', $period->id)
+            ->where('employee_id', $employee->id)
+            ->where('category_id', 3) // Discipline category
             ->first();
 
-        // If not found, try to find by year (fallback for old data without period_id)
-        if (! $disciplineScore) {
-            $disciplineScore = DisciplineScore::where('employee_id', $employee->id)
+        if ($vote) {
+            // Decode scores from the vote
+            $scores = is_array($vote->scores) ? $vote->scores : json_decode($vote->scores, true);
+
+            // Map criterion scores
+            $score1 = 0;
+            $score2 = 0;
+            $score3 = 0;
+
+            if (is_array($scores)) {
+                foreach ($scores as $scoreData) {
+                    $criterionId = $scoreData['criterion_id'] ?? null;
+                    $scoreValue = $scoreData['score'] ?? 0;
+
+                    // Get criterion order
+                    $criterion = Criterion::find($criterionId);
+                    if ($criterion) {
+                        if ($criterion->urutan === 1) {
+                            $score1 = (float) $scoreValue;
+                        } elseif ($criterion->urutan === 2) {
+                            $score2 = (float) $scoreValue;
+                        } elseif ($criterion->urutan === 3) {
+                            $score3 = (float) $scoreValue;
+                        }
+                    }
+                }
+            }
+
+            // Get attendance statistics from discipline scores in the semester
+            $startMonth = $period->semester === 'genap' ? 7 : 1;
+            $endMonth = $period->semester === 'genap' ? 12 : 6;
+
+            // Consider TMT for PPPK employees
+            $effectiveStartMonth = $this->getEffectiveStartMonth($employee, $period->year, $startMonth);
+
+            $disciplineScores = DisciplineScore::where('employee_id', $employee->id)
                 ->where('year', $period->year)
-                ->orderByDesc('final_score')
-                ->first();
+                ->where('month', '>=', $effectiveStartMonth)
+                ->where('month', '<=', $endMonth)
+                ->get();
+
+            $totalWorkDays = $disciplineScores->sum('total_work_days');
+            $presentOnTime = $disciplineScores->sum('present_on_time');
+            $leaveOnTime = $disciplineScores->sum('leave_on_time');
+            $lateMinutes = $disciplineScores->sum('late_minutes');
+            $earlyLeaveMinutes = $disciplineScores->sum('early_leave_minutes');
+
+            return [
+                'score_1' => $score1,
+                'score_2' => $score2,
+                'score_3' => $score3,
+                'final_score' => (float) $vote->total_score,
+                'total_work_days' => (int) $totalWorkDays,
+                'present_on_time' => (int) $presentOnTime,
+                'leave_on_time' => (int) $leaveOnTime,
+                'late_minutes' => (int) $lateMinutes,
+                'early_leave_minutes' => (int) $earlyLeaveMinutes,
+            ];
         }
 
-        if (! $disciplineScore) {
+        // Fallback: Calculate from DisciplineScore if no Vote exists
+        $startMonth = $period->semester === 'genap' ? 7 : 1;
+        $endMonth = $period->semester === 'genap' ? 12 : 6;
+
+        // Consider TMT for PPPK employees
+        $effectiveStartMonth = $this->getEffectiveStartMonth($employee, $period->year, $startMonth);
+
+        $disciplineScores = DisciplineScore::where('employee_id', $employee->id)
+            ->where('year', $period->year)
+            ->where('month', '>=', $effectiveStartMonth)
+            ->where('month', '<=', $endMonth)
+            ->get();
+
+        if ($disciplineScores->isEmpty()) {
             return [
                 'score_1' => 0,
                 'score_2' => 0,
@@ -284,17 +351,47 @@ class CertificateService
             ];
         }
 
+        $avgScore1 = round($disciplineScores->avg('score_1'), 2);
+        $avgScore2 = round($disciplineScores->avg('score_2'), 2);
+        $avgScore3 = round($disciplineScores->avg('score_3'), 2);
+        $avgFinalScore = round($avgScore1 + $avgScore2 + $avgScore3, 2);
+
         return [
-            'score_1' => (float) $disciplineScore->score_1,
-            'score_2' => (float) $disciplineScore->score_2,
-            'score_3' => (float) $disciplineScore->score_3,
-            'final_score' => (float) $disciplineScore->final_score,
-            'total_work_days' => (int) $disciplineScore->total_work_days,
-            'present_on_time' => (int) $disciplineScore->present_on_time,
-            'leave_on_time' => (int) $disciplineScore->leave_on_time,
-            'late_minutes' => (int) $disciplineScore->late_minutes,
-            'early_leave_minutes' => (int) $disciplineScore->early_leave_minutes,
+            'score_1' => $avgScore1,
+            'score_2' => $avgScore2,
+            'score_3' => $avgScore3,
+            'final_score' => $avgFinalScore,
+            'total_work_days' => (int) $disciplineScores->sum('total_work_days'),
+            'present_on_time' => (int) $disciplineScores->sum('present_on_time'),
+            'leave_on_time' => (int) $disciplineScores->sum('leave_on_time'),
+            'late_minutes' => (int) $disciplineScores->sum('late_minutes'),
+            'early_leave_minutes' => (int) $disciplineScores->sum('early_leave_minutes'),
         ];
+    }
+
+    /**
+     * Get effective start month considering TMT for PPPK employees.
+     */
+    protected function getEffectiveStartMonth(Employee $employee, int $year, int $semesterStartMonth): int
+    {
+        if (! $employee->tmt) {
+            return $semesterStartMonth;
+        }
+
+        $tmtYear = (int) $employee->tmt->format('Y');
+        if ($tmtYear !== $year) {
+            return $semesterStartMonth;
+        }
+
+        // Check if PPPK (golongan without /)
+        $golongan = trim($employee->golongan ?? '');
+        if ($golongan === '' || str_contains($golongan, '/')) {
+            return $semesterStartMonth;
+        }
+
+        $tmtMonth = (int) $employee->tmt->format('n');
+
+        return max($tmtMonth, $semesterStartMonth);
     }
 
     /**
