@@ -231,28 +231,6 @@
                 </tbody>
             </table>
 
-            <div class="disc-back-stats-container">
-                <div class="disc-back-section-title">Statistik Kehadiran</div>
-                <div class="disc-back-attendance-stats">
-                    <div class="disc-back-stat-box">
-                        <div class="value">{{ $disciplineData['present_on_time'] }}</div>
-                        <div class="label">Datang Tepat Waktu</div>
-                    </div>
-                    <div class="disc-back-stat-box">
-                        <div class="value">{{ $disciplineData['leave_on_time'] }}</div>
-                        <div class="label">Pulang Tepat Waktu</div>
-                    </div>
-                    <div class="disc-back-stat-box">
-                        <div class="value">{{ $disciplineData['total_work_days'] }}</div>
-                        <div class="label">Total Hari Kerja</div>
-                    </div>
-                    <div class="disc-back-stat-box">
-                        <div class="value">{{ $disciplineData['late_minutes'] }}</div>
-                        <div class="label">Menit Terlambat</div>
-                    </div>
-                </div>
-            </div>
-
             <div class="disc-back-period-info">
                 Periode: <strong>{{ $period->name }} ({{ ucfirst($period->semester) }} {{ $period->year }})</strong>
             </div>
