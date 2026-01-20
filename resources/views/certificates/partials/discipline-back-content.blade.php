@@ -1,7 +1,7 @@
 {{-- Back page content for Discipline certificate --}}
-<div style="page-break-before: always;"></div>
 <style>
     .disc-back-page-container {
+        page-break-before: always;
         position: relative;
         width: 267mm;
         height: 190mm;
