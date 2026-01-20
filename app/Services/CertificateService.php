@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Models\Category;
+use App\Models\Criterion;
+use App\Models\DisciplineScore;
 use App\Models\Employee;
 use App\Models\Period;
 use App\Models\Vote;
+use App\Models\VoteDetail;
 use Dompdf\Dompdf;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
@@ -58,10 +61,22 @@ class CertificateService
         }
 
         $certificateId = $this->generateCertificateId($period, $category, $winner);
-        $totalScore = $this->calculateWinnerScore($winner, $period, $category->id);
+
+        // Calculate average score instead of total
+        $averageScore = $this->calculateAverageScore($winner, $period, $category->id);
+        $criteriaScores = $this->getCriteriaScores($winner, $period, $category->id);
 
         $qrCodePath = $this->generateQrCode($certificateId);
-        $pdfPath = $this->generatePdf($winner, $period, $category, $certificateId, $qrCodePath, $totalScore, 'best_employee');
+        $pdfPath = $this->generatePdfWithBackPage(
+            $winner,
+            $period,
+            $category,
+            $certificateId,
+            $qrCodePath,
+            $averageScore,
+            'best_employee',
+            $criteriaScores
+        );
 
         return [
             'certificate_id' => $certificateId,
@@ -70,7 +85,7 @@ class CertificateService
             'period_id' => $period->id,
             'category_id' => $category->id,
             'rank' => $rank,
-            'score' => $totalScore,
+            'score' => $averageScore,
             'qr_code_path' => $qrCodePath,
             'pdf_path' => $pdfPath,
             'issued_at' => now(),
@@ -111,6 +126,66 @@ class CertificateService
     }
 
     /**
+     * Calculate the average score for a winner employee.
+     */
+    protected function calculateAverageScore(Employee $employee, Period $period, int $categoryId): float
+    {
+        $votes = Vote::query()
+            ->where('period_id', $period->id)
+            ->where('employee_id', $employee->id)
+            ->where('category_id', $categoryId)
+            ->get();
+
+        if ($votes->isEmpty()) {
+            return 0.0;
+        }
+
+        $totalScore = $votes->sum('total_score');
+        $voterCount = $votes->count();
+
+        return round($totalScore / $voterCount, 2);
+    }
+
+    /**
+     * Get criteria scores breakdown for a winner.
+     *
+     * @return array<int, array{nama: string, average: float}>
+     */
+    protected function getCriteriaScores(Employee $employee, Period $period, int $categoryId): array
+    {
+        // Get all criteria for this category
+        $criteria = Criterion::where('category_id', $categoryId)
+            ->orderBy('urutan')
+            ->get();
+
+        // Get all votes for this employee in this period and category
+        $voteIds = Vote::query()
+            ->where('period_id', $period->id)
+            ->where('employee_id', $employee->id)
+            ->where('category_id', $categoryId)
+            ->pluck('id');
+
+        $result = [];
+
+        foreach ($criteria as $criterion) {
+            $details = VoteDetail::whereIn('vote_id', $voteIds)
+                ->where('criterion_id', $criterion->id)
+                ->get();
+
+            $average = $details->isNotEmpty()
+                ? round($details->avg('score'), 2)
+                : 0.0;
+
+            $result[] = [
+                'nama' => $criterion->nama,
+                'average' => $average,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * Generate certificate for a discipline winner.
      */
     public function generateForDisciplineWinner(Period $period, Category $category, int $rank = 1): ?array
@@ -119,7 +194,7 @@ class CertificateService
         $winnerData = Vote::query()
             ->select('employee_id', DB::raw('sum(total_score) as total'))
             ->where('period_id', $period->id)
-            ->where('category_id', 3) 
+            ->where('category_id', 3)
             ->groupBy('employee_id')
             ->orderByDesc('total')
             ->first();
@@ -129,12 +204,25 @@ class CertificateService
         }
 
         $winner = Employee::find($winnerData->employee_id);
-        $totalScore = (float) $winnerData->total;
+
+        // Get discipline score data for breakdown
+        $disciplineData = $this->getDisciplineScoreData($winner, $period);
+        $finalScore = $disciplineData['final_score'] ?? (float) $winnerData->total;
 
         $certificateId = $this->generateCertificateId($period, $category, $winner, 'DIS');
-        
+
         $qrCodePath = $this->generateQrCode($certificateId);
-        $pdfPath = $this->generatePdf($winner, $period, $category, $certificateId, $qrCodePath, $totalScore, 'discipline');
+        $pdfPath = $this->generatePdfWithBackPage(
+            $winner,
+            $period,
+            $category,
+            $certificateId,
+            $qrCodePath,
+            $finalScore,
+            'discipline',
+            [],
+            $disciplineData
+        );
 
         return [
             'certificate_id' => $certificateId,
@@ -143,10 +231,48 @@ class CertificateService
             'period_id' => $period->id,
             'category_id' => $category->id,
             'rank' => $rank,
-            'score' => $totalScore,
+            'score' => $finalScore,
             'qr_code_path' => $qrCodePath,
             'pdf_path' => $pdfPath,
             'issued_at' => now(),
+        ];
+    }
+
+    /**
+     * Get discipline score data for an employee.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getDisciplineScoreData(Employee $employee, Period $period): array
+    {
+        $disciplineScore = DisciplineScore::where('employee_id', $employee->id)
+            ->where('period_id', $period->id)
+            ->first();
+
+        if (! $disciplineScore) {
+            return [
+                'score_1' => 0,
+                'score_2' => 0,
+                'score_3' => 0,
+                'final_score' => 0,
+                'total_work_days' => 0,
+                'present_on_time' => 0,
+                'leave_on_time' => 0,
+                'late_minutes' => 0,
+                'early_leave_minutes' => 0,
+            ];
+        }
+
+        return [
+            'score_1' => (float) $disciplineScore->score_1,
+            'score_2' => (float) $disciplineScore->score_2,
+            'score_3' => (float) $disciplineScore->score_3,
+            'final_score' => (float) $disciplineScore->final_score,
+            'total_work_days' => (int) $disciplineScore->total_work_days,
+            'present_on_time' => (int) $disciplineScore->present_on_time,
+            'leave_on_time' => (int) $disciplineScore->leave_on_time,
+            'late_minutes' => (int) $disciplineScore->late_minutes,
+            'early_leave_minutes' => (int) $disciplineScore->early_leave_minutes,
         ];
     }
 
@@ -195,14 +321,34 @@ class CertificateService
         float $score,
         string $type = 'best_employee'
     ): string {
+        return $this->generatePdfWithBackPage($employee, $period, $category, $certificateId, $qrCodePath, $score, $type);
+    }
+
+    /**
+     * Generate PDF certificate with back page from template.
+     *
+     * @param  array<int, array{nama: string, average: float}>  $criteriaScores
+     * @param  array<string, mixed>  $disciplineData
+     */
+    public function generatePdfWithBackPage(
+        Employee $employee,
+        Period $period,
+        Category $category,
+        string $certificateId,
+        string $qrCodePath,
+        float $score,
+        string $type = 'best_employee',
+        array $criteriaScores = [],
+        array $disciplineData = []
+    ): string {
         $qrCodeDataUrl = 'data:image/png;base64,'.base64_encode(Storage::get($qrCodePath));
-        
-        $backgroundPath = base_path('docs/back-cert.jpg');
+
+        $backgroundPath = base_path('docs/background-cert-3.png');
         $backgroundDataUrl = '';
         if (File::exists($backgroundPath)) {
             $typeExt = pathinfo($backgroundPath, PATHINFO_EXTENSION);
             $data = File::get($backgroundPath);
-            $backgroundDataUrl = 'data:image/' . $typeExt . ';base64,' . base64_encode($data);
+            $backgroundDataUrl = 'data:image/'.$typeExt.';base64,'.base64_encode($data);
         }
 
         $logoPath = base_path('docs/logo-pa-penajam.png');
@@ -210,12 +356,14 @@ class CertificateService
         if (File::exists($logoPath)) {
             $typeExt = pathinfo($logoPath, PATHINFO_EXTENSION);
             $data = File::get($logoPath);
-            $logoDataUrl = 'data:image/' . $typeExt . ';base64,' . base64_encode($data);
+            $logoDataUrl = 'data:image/'.$typeExt.';base64,'.base64_encode($data);
         }
 
-        $viewName = $type === 'discipline' ? 'certificates.discipline' : 'certificates.template';
+        $organizationContext = $this->getOrganizationContext();
 
-        $html = view($viewName, [
+        // Generate front page
+        $frontViewName = $type === 'discipline' ? 'certificates.discipline' : 'certificates.template';
+        $frontHtml = view($frontViewName, [
             'employee' => $employee,
             'period' => $period,
             'category' => $category,
@@ -225,11 +373,26 @@ class CertificateService
             'logoDataUrl' => $logoDataUrl,
             'score' => $score,
             'issuedDate' => now()->translatedFormat('d F Y'),
-            ...$this->getOrganizationContext(),
+            ...$organizationContext,
         ])->render();
 
+        // Generate back page
+        $backViewName = $type === 'discipline' ? 'certificates.discipline-back' : 'certificates.template-back';
+        $backHtml = view($backViewName, [
+            'employee' => $employee,
+            'period' => $period,
+            'category' => $category,
+            'criteriaScores' => $criteriaScores,
+            'averageScore' => $score,
+            'disciplineData' => $disciplineData,
+            ...$organizationContext,
+        ])->render();
+
+        // Combine both pages with page break
+        $combinedHtml = $frontHtml.'<div style="page-break-after: always;"></div>'.$backHtml;
+
         $dompdf = new Dompdf;
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($combinedHtml);
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
 

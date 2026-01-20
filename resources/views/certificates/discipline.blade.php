@@ -50,7 +50,7 @@
 
         .watermark-logo {
             width: 100mm;
-            opacity: 0.1;
+            opacity: 0.05;
             vertical-align: middle;
             display: inline-block;
         }
@@ -66,29 +66,29 @@
         }
 
         .main-content {
-            margin-top: 38mm; /* Turunkan agar tidak kena ornamen atas */
-            padding: 0 10mm;
+            margin-top: 68mm;
+            padding: 0 15mm;
         }
 
-        h1 {
+        .institution-header {
             color: #1a365d;
             font-size: 18pt;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin: 0;
+            margin: 0 0 4mm 0;
             font-weight: 900;
             text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
         }
 
         h2 {
             color: #b79c5a;
-            font-size: 26pt; /* Sedikit diperkecil */
+            font-size: 24pt;
             text-transform: uppercase;
-            margin: 0;
+            margin: 0 0 3mm 0;
             font-family: serif;
             font-weight: normal;
             letter-spacing: 3px;
-            padding: 2mm 0;
+            padding: 0;
             position: relative;
             display: inline-block;
         }
@@ -99,19 +99,21 @@
             width: 60%;
             height: 2px;
             background: #b79c5a;
-            margin: 1mm auto 0;
+            margin: 1.5mm auto 0;
         }
 
         .category {
-            font-size: 14pt;
+            font-size: 13pt;
             color: #2d3748;
-            margin-top: 2mm;
+            margin-top: 0;
+            margin-bottom: 3mm;
             font-style: italic;
             font-weight: 500;
         }
 
         .recipient-label {
-            margin-top: 4mm;
+            margin-top: 0;
+            margin-bottom: 1.5mm;
             font-size: 12pt;
             color: #4a5568;
             font-style: italic;
@@ -119,28 +121,30 @@
         }
 
         .recipient-name {
-            font-size: 28pt;
+            font-size: 26pt;
             color: #1a365d;
             font-weight: bold;
-            margin: 1mm 0; /* Rapatkan */
+            margin: 1.5mm 0;
             text-transform: uppercase;
             font-family: 'Times New Roman', serif;
             text-shadow: 1px 1px 0px rgba(255,255,255,1);
-            line-height: 1.1;
+            line-height: 1.2;
         }
 
         .recipient-detail {
-            font-size: 12pt;
+            font-size: 11pt;
             color: #2d3748;
-            margin-top: 1mm;
+            margin-top: 1.5mm;
+            margin-bottom: 2mm;
             font-weight: 500;
+            line-height: 1.3;
         }
 
         .description {
-            margin: 2mm auto; /* Rapatkan */
-            width: 90%;
-            font-size: 12pt;
-            line-height: 1.3;
+            margin: 2mm auto;
+            width: 85%;
+            font-size: 11pt;
+            line-height: 1.35;
             color: #1a202c;
         }
 
@@ -159,7 +163,7 @@
         /* Footer Section - Centered */
         .footer-section {
             position: absolute;
-            bottom: 42mm; /* Naikkan agar aman dari ornamen bawah */
+            bottom: 25mm;
             left: 0;
             width: 100%;
             text-align: center;
@@ -181,7 +185,7 @@
             font-weight: bold;
             color: #1a365d;
             font-size: 13pt;
-            margin-bottom: 16mm; /* Rapatkan space tanda tangan */
+            margin-bottom: 16mm;
         }
 
         .signature-line {
@@ -221,10 +225,8 @@
     @endif
     
     <div class="content">
-        <div class="main-content">
-            <h1>{{ $institution_name }}</h1>
-            
-            <h2>Sertifikat Kedisiplinan</h2>
+        <div class="main-content">            
+            <h2>{{ $institution_name }}</h2>
             
             <div class="category">
                 Kategori: <strong>{{ $category->nama }}</strong>
