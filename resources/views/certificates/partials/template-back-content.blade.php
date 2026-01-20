@@ -3,82 +3,41 @@
     .back-page-container {
         page-break-before: always;
         position: relative;
-        width: 100%; /* Use full width of the new page context */
-        height: 100%; /* Use full height */
-        padding: 15mm; /* Outer padding from page edge */
-        box-sizing: border-box;
+        width: 297mm;
+        height: 210mm;
+        margin: 0;
+        padding: 0;
         background-color: #ffffff;
     }
 
     .back-border-frame {
-        position: relative;
-        width: 260mm; /* Fixed safe width */
-        height: 175mm;
-        margin: 0 auto; /* Center horizontally */
+        position: absolute;
+        top: 15mm;
+        left: 18.5mm; /* (297 - 260) / 2 */
+        width: 260mm;
+        height: 180mm;
         border: 3px solid #1a365d;
         box-sizing: border-box;
-        page-break-inside: avoid;
         background-color: white;
     }
 
     .back-content {
-        padding-top: 20mm; /* Manual vertical spacing instead of table-cell */
+        padding-top: 15mm; /* Reduced from 40mm to accommodate taller table */
         text-align: center;
         width: 100%;
-    }
-
-    .back-header {
-        margin-bottom: 10mm;
-    }
-
-    .back-header h1 {
-        color: #1a365d;
-        font-size: 22pt;
-        text-transform: uppercase;
-        letter-spacing: 3px;
-        margin: 0 0 4mm 0;
-        font-weight: 900;
-    }
-
-    .back-header h2 {
-        color: #b79c5a;
-        font-size: 18pt;
-        text-transform: uppercase;
-        margin: 0;
-        font-weight: normal;
-        letter-spacing: 2px;
-    }
-
-    .back-recipient-info {
-        margin-bottom: 10mm;
-        padding-bottom: 6mm;
-        border-bottom: 2px solid #e2e8f0;
-    }
-
-    .back-recipient-name {
-        font-size: 22pt;
-        color: #1a365d;
-        font-weight: bold;
-        text-transform: uppercase;
-        margin: 0 0 3mm 0;
-    }
-
-    .back-recipient-detail {
-        font-size: 13pt;
-        color: #4a5568;
     }
 
     .back-section-title {
         font-size: 16pt;
         color: #1a365d;
         font-weight: bold;
-        margin: 4mm 0 4mm 0;
+        margin: 0 0 10mm 0;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
     }
 
     .back-score-table {
-        width: 85%;
+        width: 80%;
         margin: 0 auto;
         border-collapse: collapse;
         font-size: 12pt;
@@ -87,32 +46,14 @@
     .back-score-table th {
         background-color: #1a365d;
         color: white;
-        padding: 2mm 4mm;
+        padding: 3mm 5mm;
         text-align: left;
         font-weight: bold;
-        font-size: 12pt;
-    }
-
-    .back-score-table th:last-child {
-        text-align: center;
-        width: 25%;
     }
 
     .back-score-table td {
-        padding: 2mm 4mm;
+        padding: 3mm 5mm;
         border-bottom: 1px solid #e2e8f0;
-        font-size: 12pt;
-    }
-
-    .back-score-table td:last-child {
-        text-align: center;
-        font-weight: bold;
-        color: #1a365d;
-        font-size: 12pt;
-    }
-
-    .back-score-table tr:nth-child(even) {
-        background-color: #f7fafc;
     }
 
     .back-score-table .total-row {
@@ -120,32 +61,26 @@
         font-weight: bold;
     }
 
-    .back-score-table .total-row td {
-        border-top: 2px solid #1a365d;
-        font-size: 12pt;
-    }
-
     .back-score-table .average-row {
         background-color: #1a365d;
         color: white;
+        font-weight: bold;
     }
 
     .back-score-table .average-row td {
         color: white;
-        font-size: 13pt;
-        padding: 3mm 4mm;
-        font-weight: bold;
+        padding: 4mm 5mm;
     }
 
     .back-footer-note {
-        margin-top: 6mm;
+        margin-top: 10mm;
         font-size: 10pt;
         color: #718096;
         font-style: italic;
     }
 
     .back-period-info {
-        margin-top: 5mm;
+        margin-top: 8mm;
         font-size: 12pt;
         color: #4a5568;
     }
@@ -168,23 +103,23 @@
                 <thead>
                     <tr>
                         <th>Kriteria Penilaian</th>
-                        <th>Rata-rata Nilai</th>
+                        <th style="text-align: center;">Rata-rata Nilai</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($criteriaScores as $criteria)
                     <tr>
                         <td>{{ $criteria['nama'] }}</td>
-                        <td>{{ number_format($criteria['average'], 2, ',', '.') }}</td>
+                        <td style="text-align: center;">{{ number_format($criteria['average'], 2, ',', '.') }}</td>
                     </tr>
                     @endforeach
                     <tr class="total-row">
                         <td>Total Rata-rata</td>
-                        <td>{{ number_format($totalScore, 2, ',', '.') }}</td>
+                        <td style="text-align: center;">{{ number_format($totalScore, 2, ',', '.') }}</td>
                     </tr>
                     <tr class="average-row">
                         <td>Rata-rata Keseluruhan (Total / {{ $criteriaCount }} Kriteria)</td>
-                        <td>{{ number_format($overallAverage, 2, ',', '.') }}</td>
+                        <td style="text-align: center;">{{ number_format($overallAverage, 2, ',', '.') }}</td>
                     </tr>
                 </tbody>
             </table>
