@@ -3,10 +3,9 @@
     .back-page-container {
         page-break-before: always;
         position: relative;
-        width: 267mm;
+        width: 277mm;
         height: 190mm;
-        margin: 5mm auto;
-        padding: 0;
+        padding: 10mm;
         box-sizing: border-box;
         background-color: #ffffff;
     }
@@ -14,8 +13,8 @@
     .back-border-frame {
         width: 100%;
         height: 100%;
-        border: 5px solid #1a365d;
-        padding: 20mm 25mm;
+        border: 4px solid #1a365d;
+        padding: 15mm 20mm;
         box-sizing: border-box;
         display: table;
     }
