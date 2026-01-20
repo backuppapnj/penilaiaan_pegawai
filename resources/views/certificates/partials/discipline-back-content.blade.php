@@ -1,23 +1,21 @@
 {{-- Back page content for Discipline certificate --}}
-<div style="page-break-before: always; position: relative; width: 100%; height: 100%; background-color: #ffffff;"></div>
+<div style="page-break-before: always;"></div>
 <style>
     .disc-back-page-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        padding: 15mm;
+        position: relative;
+        width: 267mm;
+        height: 190mm;
+        margin: 5mm auto;
+        padding: 0;
         box-sizing: border-box;
         background-color: #ffffff;
-        z-index: 9999;
     }
 
     .disc-back-border-frame {
         width: 100%;
         height: 100%;
         border: 5px solid #1a365d;
-        padding: 15mm 20mm;
+        padding: 20mm 25mm;
         box-sizing: border-box;
         display: table;
     }
