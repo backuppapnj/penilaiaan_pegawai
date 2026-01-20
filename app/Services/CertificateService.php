@@ -197,7 +197,7 @@ class CertificateService
     ): string {
         $qrCodeDataUrl = 'data:image/png;base64,'.base64_encode(Storage::get($qrCodePath));
         
-        $backgroundPath = base_path('docs/background-cert.jpg');
+        $backgroundPath = base_path('docs/back-cert.jpg');
         $backgroundDataUrl = '';
         if (File::exists($backgroundPath)) {
             $typeExt = pathinfo($backgroundPath, PATHINFO_EXTENSION);
