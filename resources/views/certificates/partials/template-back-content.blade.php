@@ -154,18 +154,6 @@
 <div class="back-page-container">
     <div class="back-border-frame">
         <div class="back-content">
-            <div class="back-header">
-                <h1>{{ $institution_name }}</h1>
-                <h2>Detail Penilaian Pegawai Terbaik</h2>
-            </div>
-
-            <div class="back-recipient-info">
-                <div class="back-recipient-name">{{ $employee->nama }}</div>
-                <div class="back-recipient-detail">
-                    NIP. {{ $employee->nip }} | {{ $employee->jabatan }}
-                </div>
-            </div>
-
             <div class="back-section-title">Rekapitulasi Nilai per Kriteria</div>
 
             @php

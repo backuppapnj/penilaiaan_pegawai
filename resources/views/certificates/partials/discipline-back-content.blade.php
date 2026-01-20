@@ -186,18 +186,6 @@
 <div class="disc-back-page-container">
     <div class="disc-back-border-frame">
         <div class="disc-back-content">
-            <div class="disc-back-header">
-                <h1>{{ $institution_name }}</h1>
-                <h2>Detail Penilaian Kedisiplinan</h2>
-            </div>
-
-            <div class="disc-back-recipient-info">
-                <div class="disc-back-recipient-name">{{ $employee->nama }}</div>
-                <div class="disc-back-recipient-detail">
-                    NIP. {{ $employee->nip }} | {{ $employee->jabatan }}
-                </div>
-            </div>
-
             <div class="disc-back-section-title">Rekapitulasi Skor Kedisiplinan</div>
 
             <table class="disc-back-score-table">
