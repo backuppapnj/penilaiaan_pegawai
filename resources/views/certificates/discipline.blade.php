@@ -20,7 +20,7 @@
         }
 
         .background-image {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
@@ -30,7 +30,7 @@
 
         /* Watermark Logo Style */
         .watermark-container {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
