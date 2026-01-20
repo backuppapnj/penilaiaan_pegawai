@@ -7,7 +7,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        padding: 15mm;
+        padding: 12mm;
         box-sizing: border-box;
         background-color: #ffffff;
         z-index: 9999;
@@ -17,30 +17,33 @@
         width: 100%;
         height: 100%;
         border: 3px solid #1a365d;
-        padding: 10mm;
+        padding: 8mm 15mm;
         box-sizing: border-box;
+        display: table;
     }
 
     .disc-back-content {
+        display: table-cell;
+        vertical-align: middle;
         text-align: center;
     }
 
     .disc-back-header {
-        margin-bottom: 8mm;
+        margin-bottom: 10mm;
     }
 
     .disc-back-header h1 {
         color: #1a365d;
-        font-size: 18pt;
+        font-size: 22pt;
         text-transform: uppercase;
-        letter-spacing: 2px;
-        margin: 0 0 3mm 0;
+        letter-spacing: 3px;
+        margin: 0 0 4mm 0;
         font-weight: 900;
     }
 
     .disc-back-header h2 {
         color: #b79c5a;
-        font-size: 16pt;
+        font-size: 18pt;
         text-transform: uppercase;
         margin: 0;
         font-weight: normal;
@@ -48,46 +51,52 @@
     }
 
     .disc-back-recipient-info {
-        margin-bottom: 8mm;
-        padding-bottom: 5mm;
-        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 10mm;
+        padding-bottom: 6mm;
+        border-bottom: 2px solid #e2e8f0;
     }
 
     .disc-back-recipient-name {
-        font-size: 18pt;
+        font-size: 22pt;
         color: #1a365d;
         font-weight: bold;
         text-transform: uppercase;
-        margin: 0 0 2mm 0;
+        margin: 0 0 3mm 0;
     }
 
     .disc-back-recipient-detail {
-        font-size: 11pt;
+        font-size: 13pt;
         color: #4a5568;
     }
 
     .disc-back-section-title {
-        font-size: 14pt;
+        font-size: 16pt;
         color: #1a365d;
         font-weight: bold;
-        margin: 6mm 0 4mm 0;
+        margin: 8mm 0 6mm 0;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
 
     .disc-back-score-table {
-        width: 80%;
+        width: 85%;
         margin: 0 auto;
         border-collapse: collapse;
-        font-size: 12pt;
+        font-size: 13pt;
     }
 
     .disc-back-score-table th {
         background-color: #1a365d;
         color: white;
-        padding: 3mm 5mm;
+        padding: 4mm 6mm;
         text-align: left;
         font-weight: bold;
+        font-size: 14pt;
+    }
+
+    .disc-back-score-table th:nth-child(2) {
+        text-align: center;
+        width: 15%;
     }
 
     .disc-back-score-table th:last-child {
@@ -96,14 +105,20 @@
     }
 
     .disc-back-score-table td {
-        padding: 3mm 5mm;
+        padding: 4mm 6mm;
         border-bottom: 1px solid #e2e8f0;
+        font-size: 13pt;
+    }
+
+    .disc-back-score-table td:nth-child(2) {
+        text-align: center;
     }
 
     .disc-back-score-table td:last-child {
         text-align: center;
         font-weight: bold;
         color: #1a365d;
+        font-size: 14pt;
     }
 
     .disc-back-score-table tr:nth-child(even) {
@@ -117,54 +132,55 @@
 
     .disc-back-score-table .total-row td {
         color: white;
-        font-size: 14pt;
-        padding: 4mm 5mm;
+        font-size: 15pt;
+        padding: 5mm 6mm;
         border-top: 2px solid #1a365d;
+        font-weight: bold;
     }
 
     .disc-back-attendance-stats {
-        margin-top: 6mm;
+        margin-top: 8mm;
         text-align: center;
     }
 
     .disc-back-stat-box {
         display: inline-block;
         background-color: #f7fafc;
-        border: 1px solid #e2e8f0;
-        padding: 4mm 8mm;
-        border-radius: 3mm;
+        border: 2px solid #e2e8f0;
+        padding: 6mm 12mm;
+        border-radius: 4mm;
         text-align: center;
-        min-width: 40mm;
-        margin: 0 4mm;
+        min-width: 50mm;
+        margin: 0 5mm;
     }
 
     .disc-back-stat-box .value {
-        font-size: 16pt;
+        font-size: 20pt;
         font-weight: bold;
         color: #1a365d;
-        margin-bottom: 1mm;
+        margin-bottom: 2mm;
     }
 
     .disc-back-stat-box .label {
-        font-size: 9pt;
+        font-size: 10pt;
         color: #718096;
     }
 
     .disc-back-footer-note {
-        margin-top: 6mm;
-        font-size: 10pt;
+        margin-top: 10mm;
+        font-size: 11pt;
         color: #718096;
         font-style: italic;
     }
 
     .disc-back-period-info {
-        margin-top: 5mm;
-        font-size: 11pt;
+        margin-top: 8mm;
+        font-size: 13pt;
         color: #4a5568;
     }
 
     .disc-back-stats-container {
-        margin-top: 5mm;
+        margin-top: 8mm;
     }
 </style>
 <div class="disc-back-page-container">
@@ -195,17 +211,17 @@
                 <tbody>
                     <tr>
                         <td>Tingkat Kehadiran & Ketepatan Waktu</td>
-                        <td style="text-align: center;">50%</td>
+                        <td>50%</td>
                         <td>{{ number_format($disciplineData['score_1'], 2, ',', '.') }}</td>
                     </tr>
                     <tr>
                         <td>Kedisiplinan (Tidak Terlambat & Pulang Awal)</td>
-                        <td style="text-align: center;">35%</td>
+                        <td>35%</td>
                         <td>{{ number_format($disciplineData['score_2'], 2, ',', '.') }}</td>
                     </tr>
                     <tr>
                         <td>Ketaatan (Tidak Izin Berlebih)</td>
-                        <td style="text-align: center;">15%</td>
+                        <td>15%</td>
                         <td>{{ number_format($disciplineData['score_3'], 2, ',', '.') }}</td>
                     </tr>
                     <tr class="total-row">

@@ -7,7 +7,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        padding: 15mm;
+        padding: 12mm;
         box-sizing: border-box;
         background-color: #ffffff;
         z-index: 9999;
@@ -17,30 +17,33 @@
         width: 100%;
         height: 100%;
         border: 3px solid #1a365d;
-        padding: 10mm;
+        padding: 8mm 15mm;
         box-sizing: border-box;
+        display: table;
     }
 
     .back-content {
+        display: table-cell;
+        vertical-align: middle;
         text-align: center;
     }
 
     .back-header {
-        margin-bottom: 8mm;
+        margin-bottom: 10mm;
     }
 
     .back-header h1 {
         color: #1a365d;
-        font-size: 18pt;
+        font-size: 22pt;
         text-transform: uppercase;
-        letter-spacing: 2px;
-        margin: 0 0 3mm 0;
+        letter-spacing: 3px;
+        margin: 0 0 4mm 0;
         font-weight: 900;
     }
 
     .back-header h2 {
         color: #b79c5a;
-        font-size: 16pt;
+        font-size: 18pt;
         text-transform: uppercase;
         margin: 0;
         font-weight: normal;
@@ -48,46 +51,47 @@
     }
 
     .back-recipient-info {
-        margin-bottom: 8mm;
-        padding-bottom: 5mm;
-        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 10mm;
+        padding-bottom: 6mm;
+        border-bottom: 2px solid #e2e8f0;
     }
 
     .back-recipient-name {
-        font-size: 18pt;
+        font-size: 22pt;
         color: #1a365d;
         font-weight: bold;
         text-transform: uppercase;
-        margin: 0 0 2mm 0;
+        margin: 0 0 3mm 0;
     }
 
     .back-recipient-detail {
-        font-size: 11pt;
+        font-size: 13pt;
         color: #4a5568;
     }
 
     .back-section-title {
-        font-size: 14pt;
+        font-size: 16pt;
         color: #1a365d;
         font-weight: bold;
-        margin: 6mm 0 4mm 0;
+        margin: 8mm 0 6mm 0;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
 
     .back-score-table {
-        width: 80%;
+        width: 85%;
         margin: 0 auto;
         border-collapse: collapse;
-        font-size: 12pt;
+        font-size: 13pt;
     }
 
     .back-score-table th {
         background-color: #1a365d;
         color: white;
-        padding: 3mm 5mm;
+        padding: 4mm 6mm;
         text-align: left;
         font-weight: bold;
+        font-size: 14pt;
     }
 
     .back-score-table th:last-child {
@@ -96,14 +100,16 @@
     }
 
     .back-score-table td {
-        padding: 3mm 5mm;
+        padding: 4mm 6mm;
         border-bottom: 1px solid #e2e8f0;
+        font-size: 13pt;
     }
 
     .back-score-table td:last-child {
         text-align: center;
         font-weight: bold;
         color: #1a365d;
+        font-size: 14pt;
     }
 
     .back-score-table tr:nth-child(even) {
@@ -117,7 +123,7 @@
 
     .back-score-table .total-row td {
         border-top: 2px solid #1a365d;
-        font-size: 13pt;
+        font-size: 14pt;
     }
 
     .back-score-table .average-row {
@@ -127,20 +133,21 @@
 
     .back-score-table .average-row td {
         color: white;
-        font-size: 14pt;
-        padding: 4mm 5mm;
+        font-size: 15pt;
+        padding: 5mm 6mm;
+        font-weight: bold;
     }
 
     .back-footer-note {
-        margin-top: 8mm;
-        font-size: 10pt;
+        margin-top: 10mm;
+        font-size: 11pt;
         color: #718096;
         font-style: italic;
     }
 
     .back-period-info {
-        margin-top: 5mm;
-        font-size: 11pt;
+        margin-top: 8mm;
+        font-size: 13pt;
         color: #4a5568;
     }
 </style>
