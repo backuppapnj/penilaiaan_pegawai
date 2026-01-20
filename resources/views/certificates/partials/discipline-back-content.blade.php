@@ -7,7 +7,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        padding: 12mm;
+        padding: 15mm;
         box-sizing: border-box;
         background-color: #ffffff;
         z-index: 9999;
@@ -16,8 +16,8 @@
     .disc-back-border-frame {
         width: 100%;
         height: 100%;
-        border: 3px solid #1a365d;
-        padding: 8mm 15mm;
+        border: 5px solid #1a365d;
+        padding: 15mm 20mm;
         box-sizing: border-box;
         display: table;
     }
