@@ -3,26 +3,28 @@
     .disc-back-page-container {
         page-break-before: always;
         position: relative;
-        width: 277mm;
-        height: 190mm;
-        padding: 10mm;
+        width: 100%;
+        height: 100%;
+        padding: 15mm;
         box-sizing: border-box;
         background-color: #ffffff;
     }
 
     .disc-back-border-frame {
-        width: 100%;
-        height: 100%;
-        border: 4px solid #1a365d;
-        padding: 15mm 20mm;
+        position: relative;
+        width: 260mm;
+        height: 175mm;
+        margin: 0 auto;
+        border: 3px solid #1a365d;
         box-sizing: border-box;
-        display: table;
+        page-break-inside: avoid;
+        background-color: white;
     }
 
     .disc-back-content {
-        display: table-cell;
-        vertical-align: middle;
+        padding-top: 20mm;
         text-align: center;
+        width: 100%;
     }
 
     .disc-back-header {

@@ -3,26 +3,28 @@
     .back-page-container {
         page-break-before: always;
         position: relative;
-        width: 277mm;
-        height: 190mm;
-        padding: 10mm;
+        width: 100%; /* Use full width of the new page context */
+        height: 100%; /* Use full height */
+        padding: 15mm; /* Outer padding from page edge */
         box-sizing: border-box;
         background-color: #ffffff;
     }
 
     .back-border-frame {
-        width: 100%;
-        height: 100%;
-        border: 4px solid #1a365d;
-        padding: 15mm 20mm;
+        position: relative;
+        width: 260mm; /* Fixed safe width */
+        height: 175mm;
+        margin: 0 auto; /* Center horizontally */
+        border: 3px solid #1a365d;
         box-sizing: border-box;
-        display: table;
+        page-break-inside: avoid;
+        background-color: white;
     }
 
     .back-content {
-        display: table-cell;
-        vertical-align: middle;
+        padding-top: 20mm; /* Manual vertical spacing instead of table-cell */
         text-align: center;
+        width: 100%;
     }
 
     .back-header {
@@ -70,7 +72,7 @@
         font-size: 16pt;
         color: #1a365d;
         font-weight: bold;
-        margin: 8mm 0 6mm 0;
+        margin: 4mm 0 4mm 0;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
@@ -79,16 +81,16 @@
         width: 85%;
         margin: 0 auto;
         border-collapse: collapse;
-        font-size: 13pt;
+        font-size: 12pt;
     }
 
     .back-score-table th {
         background-color: #1a365d;
         color: white;
-        padding: 4mm 6mm;
+        padding: 2mm 4mm;
         text-align: left;
         font-weight: bold;
-        font-size: 14pt;
+        font-size: 12pt;
     }
 
     .back-score-table th:last-child {
@@ -97,16 +99,16 @@
     }
 
     .back-score-table td {
-        padding: 4mm 6mm;
+        padding: 2mm 4mm;
         border-bottom: 1px solid #e2e8f0;
-        font-size: 13pt;
+        font-size: 12pt;
     }
 
     .back-score-table td:last-child {
         text-align: center;
         font-weight: bold;
         color: #1a365d;
-        font-size: 14pt;
+        font-size: 12pt;
     }
 
     .back-score-table tr:nth-child(even) {
@@ -120,7 +122,7 @@
 
     .back-score-table .total-row td {
         border-top: 2px solid #1a365d;
-        font-size: 14pt;
+        font-size: 12pt;
     }
 
     .back-score-table .average-row {
@@ -130,21 +132,21 @@
 
     .back-score-table .average-row td {
         color: white;
-        font-size: 15pt;
-        padding: 5mm 6mm;
+        font-size: 13pt;
+        padding: 3mm 4mm;
         font-weight: bold;
     }
 
     .back-footer-note {
-        margin-top: 10mm;
-        font-size: 11pt;
+        margin-top: 6mm;
+        font-size: 10pt;
         color: #718096;
         font-style: italic;
     }
 
     .back-period-info {
-        margin-top: 8mm;
-        font-size: 13pt;
+        margin-top: 5mm;
+        font-size: 12pt;
         color: #4a5568;
     }
 </style>

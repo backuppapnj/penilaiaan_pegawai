@@ -13,10 +13,9 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
-Route::get('/', fn (Request $request) => Inertia::render('Auth/Login', [
-    'canResetPassword' => Features::enabled(Features::resetPasswords()),
-    'status' => $request->session()->get('status'),
-]))->name('home');
+Route::get('/', function () {
+    return redirect()->route('login');
+});
 
 // Login route (GET for Wayfinder, POST handled by Fortify)
 Route::get('/login', fn (Request $request) => Inertia::render('Auth/Login', [
